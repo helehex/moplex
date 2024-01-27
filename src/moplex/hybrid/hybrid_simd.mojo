@@ -50,7 +50,7 @@ fn constrain_square[type: DType, a: SIMD[type,1], b: FloatLiteral](): constraine
 #---
 #---
 @register_passable("trivial")
-struct HybridSIMD[type: DType, size: Int = (simdwidthof[type]()//2), square: SIMD[type,1] = -1]:
+struct HybridSIMD[type: DType, size: Int = (simdwidthof[type]()//2), square: SIMD[type,1] = -1](Stringable):
     """
     Represents a hybrid small vector backed by hardware vector elements, with scalar and antiox parts.
 

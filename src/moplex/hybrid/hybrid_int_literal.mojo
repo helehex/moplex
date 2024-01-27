@@ -19,8 +19,9 @@ alias x: HyperplexIntLiteral = HyperplexIntLiteral(0,1)
 #------------ Hybrid Int Literal ------------#
 #---
 #---
+#@nonmaterializable(HybridInt[Self.square]) #is this possible
 @register_passable("trivial")
-struct HybridIntLiteral[square: Int = -1]:
+struct HybridIntLiteral[square: Int](Stringable):
     """
     Represent a hybrid integer literal with scalar and antiox parts.
 

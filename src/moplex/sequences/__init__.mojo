@@ -16,7 +16,7 @@ fn fibonacci[n0: Int = 0, n1: Int = 1](iterations: Int) -> Int:
 fn add(a: Int, b: Int) -> Int: return a+b
 
 @always_inline("nodebug")
-fn recurrent[T: AnyType, func: fn(T,T)->T, default_n0: T, default_n1: T](iterations: Int, n0: T = default_n0, n1: T = default_n1) -> T:
+fn recurrent[T: AnyRegType, func: fn(T,T)->T, default_n0: T, default_n1: T](iterations: Int, n0: T = default_n0, n1: T = default_n1) -> T:
     var _n0: T = n0
     var _n1: T = n1
     for i in range(iterations):

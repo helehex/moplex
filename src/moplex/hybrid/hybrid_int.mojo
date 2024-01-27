@@ -17,7 +17,7 @@ alias HyperplexInt = HybridInt[1]
 #--- not really necessary, but thats ok, it does allow for Int/Int to give a SIMD[DType.float64,1], thats the only thing i can really see
 #---
 @register_passable("trivial")
-struct HybridInt[square: Int = -1]:
+struct HybridInt[square: Int](Stringable):
     """
     Represent a hybrid integer type with scalar and antiox parts.
 

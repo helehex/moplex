@@ -23,7 +23,7 @@ fn constrain_square[a: FloatLiteral, b: Int]():
 #---
 #---
 @register_passable("trivial")
-struct HybridFloatLiteral[square: FloatLiteral = -1]:
+struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
     """
     Represent a hybrid floating point literal with scalar and antiox parts.
 
