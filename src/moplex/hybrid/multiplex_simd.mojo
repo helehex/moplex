@@ -2,8 +2,8 @@
 The greater algebra containing Hyperplex, Complex, and Paraplex numbers.
 """
 
-from ..moio import *
-from ..momath import *
+from ..io import *
+from ..math import *
 
 alias MultiplexInt8   = MultiplexSIMD[DType.int8]
 alias MultiplexUInt8  = MultiplexSIMD[DType.uint8]
@@ -134,12 +134,12 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
         """Formats the multiplex as a String."""
         @parameter
         if size == 1:
-            return String(self.s[0]) + " + " + String(self.i[0])+"i" + " + " + String(self.o[0])+"o" + " + " + String(self.x[0])+"x"
+            return str(self.s) + " + " + str(self.i)+"i" + " + " + str(self.o)+"o" + " + " + str(self.x)+"x"
         else:
             var result: String = ""
             @unroll
-            for index in range(size-1): result += self.get_multiplex(index).__str__() + "\n"
-            return result + self.get_multiplex(size-1).__str__()
+            for index in range(size-1): result += str(self.get_multiplex(index)) + "\n"
+            return result + str(self.get_multiplex(size-1))
 
 
     #------( Get / Set )------#
@@ -262,8 +262,8 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
         Returns:
             The multiplex denomer.
         """
-        let io = self.i-self.o
-        let result = self.s*self.s + io*io - self.o*self.o - self.x*self.x
+        var io = self.i-self.o
+        var result = self.s*self.s + io*io - self.o*self.o - self.x*self.x
         @parameter
         if absolute: return abs(result)
         else: return result
@@ -301,8 +301,8 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
         Returns:
             The multiplex antidenomer.
         """
-        let io = self.i-self.o
-        let result = -io*io + self.o*self.o + self.x*self.x
+        var io = self.i-self.o
+        var result = -io*io + self.o*self.o + self.x*self.x
         @parameter
         if absolute: return abs(result)
         else: return result
@@ -330,7 +330,7 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
     # @always_inline
     # fn argument[interval: Int = 0](self) -> Self.Coef:
     #     """Gets the argument of this multiplex number."""
-    #     let m = self.antidenomer()
+    #     var m = self.antidenomer()
     #     if m < 0:
     #         if self.s < 0: return pi - atan2(self.antimeasure(), self.s)
     #         else: return atan2(self.antimeasure(), self.s)
@@ -385,14 +385,14 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
 
     @always_inline # Multiplex + Hybrid
     fn __add__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
-        let unital = other.to_unital()
+        var unital = other.to_unital()
         @parameter
-        if unital.square == -1:  return Self(self.s + unital.s, self.i + unital.a, self.o, self.x)
-        elif unital.square == 0: return Self(self.s + unital.s, self.i, self.o + unital.a, self.x)
-        elif unital.square == 1: return Self(self.s + unital.s, self.i, self.o, self.x + unital.a)
+        if unital.square == -1:
+            return Self(self.s + unital.s, self.i + unital.a, self.o, self.x)
+        elif unital.square == 0:
+            return Self(self.s + unital.s, self.i, self.o + unital.a, self.x)
         else:
-            print("something went wrong (hybrid is not unitized)")
-            return 0
+            return Self(self.s + unital.s, self.i, self.o, self.x + unital.a)
 
     @always_inline # Multiplex + Multiplex
     fn __add__[__:None=None](self, other: Self) -> Self:
@@ -405,14 +405,14 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
 
     @always_inline # Multiplex - Hybrid
     fn __sub__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
-        let unital = other.to_unital()
+        var unital = other.to_unital()
         @parameter
-        if unital.square == -1:  return Self(self.s - unital.s, self.i - unital.a, self.o, self.x)
-        elif unital.square == 0: return Self(self.s - unital.s, self.i, self.o - unital.a, self.x)
-        elif unital.square == 1: return Self(self.s - unital.s, self.i, self.o, self.x - unital.a)
+        if unital.square == -1:
+            return Self(self.s - unital.s, self.i - unital.a, self.o, self.x)
+        elif unital.square == 0:
+            return Self(self.s - unital.s, self.i, self.o - unital.a, self.x)
         else:
-            print("something went wrong (hybrid is not unitized)")
-            return 0
+            return Self(self.s - unital.s, self.i, self.o, self.x - unital.a)
 
     @always_inline # Multiplex - Multiplex
     fn __sub__[__:None=None](self, other: Self) -> Self:
@@ -458,14 +458,14 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
 
     @always_inline # Hybrid + Multiplex
     fn __radd__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
-        let unital = other.to_unital()
+        var unital = other.to_unital()
         @parameter
-        if unital.square == -1:  return Self(unital.s + self.s, unital.a + self.i, self.o, self.x)
-        elif unital.square == 0: return Self(unital.s + self.s, self.i, unital.a + self.o, self.x)
-        elif unital.square == 1: return Self(unital.s + self.s, self.i, self.o, unital.a + self.x)
+        if unital.square == -1:
+            return Self(unital.s + self.s, unital.a + self.i, self.o, self.x)
+        elif unital.square == 0:
+            return Self(unital.s + self.s, self.i, unital.a + self.o, self.x)
         else:
-            print("something went wrong (hybrid is not unitized)")
-            return 0
+            return Self(unital.s + self.s, self.i, self.o, unital.a + self.x)
 
     @always_inline # Multiplex + Multiplex
     fn __radd__[__:None=None](self, other: Self) -> Self:
@@ -478,14 +478,14 @@ struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
 
     @always_inline # Hybrid - Multiplex
     fn __rsub__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
-        let unital = other.to_unital()
+        var unital = other.to_unital()
         @parameter
-        if unital.square == 1:    return Self(unital.s - self.s, unital.a - self.i, -self.o, -self.x)
-        elif unital.square == -1: return Self(unital.s - self.s, -self.i, unital.a - self.o, -self.x)
-        elif unital.square == 0:  return Self(unital.s - self.s, -self.i, -self.o, unital.a - self.x)
+        if unital.square == 1:
+            return Self(unital.s - self.s, unital.a - self.i, -self.o, -self.x)
+        elif unital.square == -1:
+            return Self(unital.s - self.s, -self.i, unital.a - self.o, -self.x)
         else:
-            print("something went wrong (hybrid is not unitized)")
-            return 0
+            return Self(unital.s - self.s, -self.i, -self.o, unital.a - self.x)
 
     @always_inline # Multiplex - Multiplex
     fn __rsub__[__:None=None](self, other: Self) -> Self:

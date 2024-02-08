@@ -2,8 +2,8 @@
 Implements hybrid types backed by SIMD vectors. Parameterized on the antiox squared.
 """
 
-from ..moio import *
-from ..momath import *
+from ..io import *
+from ..math import *
 
 alias ComplexInt8   = HybridSIMD[DType.int8,1,-1]
 alias ComplexUInt8  = HybridSIMD[DType.uint8,1,-1]
@@ -156,19 +156,13 @@ struct HybridSIMD[type: DType, size: Int = (simdwidthof[type]()//2), square: SIM
         """Creates a non-algebraic StaticTuple from the hybrids parts."""
         return StaticTuple[2, Self.Coef](self.s, self.a)
 
-    # to_unital is being really screwed up for the other types aswell, so i wont add it yet for them, but i need it for simd to construct multiplex without constraining
-    # wont compile if you try doing it the expected way (using Self.unital_square or sign[square] instead of parameter)
-    # not ideal, as if you choose to explicitly use the parameter, wont behave correctly
     @always_inline
-    fn to_unital[unital_square: SIMD[type,1] = Self.unital_square](self) -> HybridSIMD[type, size, unital_square]:
+    fn to_unital(self) -> HybridSIMD[type, size, Self.unital_square]:
         """Unitize the HybridSIMD, this normalizes the square and adjusts the antiox coefficient."""
         @parameter
-        if Self.unital_square == 1: return HybridSIMD[type,size,unital_square](self.s, self.a * sqrt(square))
-        elif Self.unital_square == -1: return HybridSIMD[type,size,unital_square](self.s, self.a * sqrt(-square))
-        elif Self.unital_square == 0: return HybridSIMD[type,size,unital_square](self.s, self.a)
-        else:
-            print("something went wrong (could not unitize hybrid)")
-            return 0
+        if Self.unital_square == 1: return HybridSIMD[type,size,Self.unital_square](self.s, self.a * sqrt(square))
+        elif Self.unital_square == -1: return HybridSIMD[type,size,Self.unital_square](self.s, self.a * sqrt(-square))
+        else: return HybridSIMD[type,size,Self.unital_square](self.s, self.a)
 
     @always_inline
     fn cast[target: DType](self) -> HybridSIMD[target, size, square.cast[target]()]:
@@ -188,12 +182,12 @@ struct HybridSIMD[type: DType, size: Int = (simdwidthof[type]()//2), square: SIM
         """Formats the hybrid as a String."""
         @parameter
         if size == 1:
-            return String(self.s[0]) + " + " + String(self.a[0]) + symbol[type,square]()
+            return str(self.s) + " + " + str(self.a) + symbol[type,square]()
         else:
             var result: String = ""
             @unroll
-            for index in range(size-1): result += self.get_hybrid(index).__str__() + "\n"
-            return result + self.get_hybrid(size-1).__str__()
+            for index in range(size-1): result += str(self.get_hybrid(index)) + "\n"
+            return result + str(self.get_hybrid(size-1))
 
 
     #------( Get / Set )------#

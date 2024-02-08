@@ -3,8 +3,8 @@ Implements a hybrid floating point literal, parameterized on the antiox squared.
 """
 
 
-from ..moio import *
-from ..momath import *
+from ..io import *
+from ..math import *
 
 alias ComplexFloatLiteral = HybridFloatLiteral[-1]
 alias ParaplexFloatLiteral = HybridFloatLiteral[0]
@@ -41,8 +41,8 @@ struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
     alias Coef = FloatLiteral
     """Represents a floating point literal coefficient."""
 
-    #alias unital_square: FloatLiteral = sign(square)
-    #"""The normalized square."""
+    alias unital_square: FloatLiteral = sign(square)
+    """The normalized square."""
     
 
     #------< Data >------#
@@ -75,7 +75,7 @@ struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
     # @always_inline # Hybrid
     # fn __init__(h: integral_counterpart[square]()) -> Self:
     #     """Initializes a HybridFloatLiteral from a HybridIntLiteral."""
-    #     let h_ = rebind[HybridIntLiteral[square.to_int()], integral_counterpart[square]()](h)
+    #     var h_ = rebind[HybridIntLiteral[square.to_int()], integral_counterpart[square]()](h)
     #     constrain_square[square, h_.square]()
     #     return Self{s:h_.s, a:h_.a}
 
@@ -97,17 +97,13 @@ struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
         """Creates a non-algebraic StaticTuple from the hybrids parts."""
         return StaticTuple[2, Self.Coef](self.s, self.a)
 
-    # to_unital is being really screwed up so guess i wont add it yet
-    # @always_inline
-    # fn to_unital(self) -> HybridFloatLiteral[Self.unital_square]:
-    #     """Unitize the HybridInt, this normalizes the square and adjusts the antiox coefficient."""
-    #     @parameter
-    #     if Self.unital_square == 1: return HybridFloatLiteral[Self.unital_square](self.s, self.a * sqrt(square))
-    #     elif Self.unital_square == -1: return HybridFloatLiteral[Self.unital_square](self.s, self.a * sqrt(-square))
-    #     elif Self.unital_square == 0: return HybridFloatLiteral[Self.unital_square](self.s, self.a)
-    #     else:
-    #         print("something went wrong (could not unitize hybrid)")
-    #         return 0
+    @always_inline
+    fn to_unital(self) -> HybridFloatLiteral[Self.unital_square]:
+        """Unitize the HybridInt, this normalizes the square and adjusts the antiox coefficient."""
+        @parameter
+        if Self.unital_square == 1: return HybridFloatLiteral[Self.unital_square](self.s, self.a * sqrt(square))
+        elif Self.unital_square == -1: return HybridFloatLiteral[Self.unital_square](self.s, self.a * sqrt(-square))
+        else: return HybridFloatLiteral[Self.unital_square](self.s, self.a)
     
     
     #------( Formatting )------#

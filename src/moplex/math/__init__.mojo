@@ -208,7 +208,7 @@ fn expa[type: DType, size: Int, square: SIMD[type,1]](value: SIMD[type, size]) -
     elif square == -1: return HybridSIMD[type, size, square](cos(value), sin(value))
     elif square == 0: return HybridSIMD[type, size, square](1, value)
 
-    let convert = sqrt(square) # not sure if this works
+    var convert = sqrt(square) # not sure if this works
     if square > 0: return HybridSIMD[type, size, square](cosh(value*convert), sinh(value*convert)/convert)
     else: return HybridSIMD[type, size, square](cos(value*convert), sin(value*convert)/convert)
 
@@ -284,19 +284,19 @@ fn pow(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
 @always_inline
 fn pow[square: FloatLiteral](a: HybridFloatLiteral[square], b: FloatLiteral) -> HybridFloatLiteral[square]:
     """FloatLiteral version of hybrid pow."""
-    let result = pow[DType.float64,1,square](a, b)
+    var result = pow[DType.float64,1,square](a, b)
     return HybridFloatLiteral[square](result.s.value, result.a.value)
 
 @always_inline
 fn pow[square: FloatLiteral](a: FloatLiteral, b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
     """FloatLiteral version of hybrid pow."""
-    let result = pow[DType.float64,1,square](a, b)
+    var result = pow[DType.float64,1,square](a, b)
     return HybridFloatLiteral[square](result.s.value, result.a.value)
 
 @always_inline
 fn pow[square: FloatLiteral](a: HybridFloatLiteral[square], b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
     """FloatLiteral version of hybrid pow."""
-    let result = pow[DType.float64,1,square](a, b)
+    var result = pow[DType.float64,1,square](a, b)
     return HybridFloatLiteral[square](result.s.value, result.a.value)
 
 @always_inline
@@ -758,10 +758,10 @@ fn min[square: Int](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[squ
 @always_inline
 fn min[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
     """Return the value which is closest to negative infinity."""
-    let a_denomer = a.denomer()
-    let b_denomer = b.denomer()
-    let nans = isnan(a_denomer) or isnan(b_denomer)
-    let cond = a < b
+    var a_denomer = a.denomer()
+    var b_denomer = b.denomer()
+    var nans = isnan(a_denomer) or isnan(b_denomer)
+    var cond = a < b
     return select(nans, HybridSIMD[type, size, square](nan[type](), nan[type]()), select(cond, a, b))
 
 # @always_inline
@@ -813,10 +813,10 @@ fn max[square: Int](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[squ
 @always_inline
 fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
     """Return the value which is closest to positive infinity."""
-    let a_denomer = a.denomer()
-    let b_denomer = b.denomer()
-    let nans = isnan(a_denomer) or isnan(b_denomer)
-    let cond = a > b
+    var a_denomer = a.denomer()
+    var b_denomer = b.denomer()
+    var nans = isnan(a_denomer) or isnan(b_denomer)
+    var cond = a > b
     return select(nans, HybridSIMD[type, size, square](nan[type](), nan[type]()), select(cond, a, b))
 
 

@@ -1,23 +1,23 @@
-from ..momath import *
+from ..math import *
 
 alias simd_type: DType = DType.float64
 alias simd_size = 4
 
 fn static_test():
 
-    let int_literal: IntLiteral = IntLiteral(2)
+    var int_literal: IntLiteral = IntLiteral(2)
     var hybrid_int_literal: HybridIntLiteral[1] = HybridIntLiteral[1](2)
 
-    let float_literal: FloatLiteral = FloatLiteral(2)
+    var float_literal: FloatLiteral = FloatLiteral(2)
     var hybrid_float_literal: HybridFloatLiteral[1] = HybridFloatLiteral[1](2)
 
-    let int: Int = Int(2)
+    var int: Int = Int(2)
     var hybrid_int: HybridInt[1] = HybridInt[1](2,1)
 
-    let float: SIMD[simd_type,1] = SIMD[simd_type,1](2)
-    let hybrid_float: HybridSIMD[simd_type,1] = HybridSIMD[simd_type,1](2)
+    var float: SIMD[simd_type,1] = SIMD[simd_type,1](2)
+    var hybrid_float: HybridSIMD[simd_type,1] = HybridSIMD[simd_type,1](2)
 
-    let simd: SIMD[simd_type,simd_size] = SIMD[simd_type,simd_size](2)
+    var simd: SIMD[simd_type,simd_size] = SIMD[simd_type,simd_size](2)
     var hybrid_simd: HybridSIMD[simd_type,simd_size] = HybridSIMD[simd_type,simd_size](2)
 
     var multiplex: MultiplexSIMD[simd_type,simd_size] = MultiplexSIMD[simd_type,simd_size](2)
@@ -218,7 +218,7 @@ fn static_test():
 
     # to_unital is totally screwed with alias problems in current version, but i kept the non-idea simd.to_unital workaround because i need it to construct multiplex without constraining
     #var a: HybridSIMD[DType.float32,1,-1] = HybridSIMD[DType.float32,1,-2](0,3).unitize()
-    #let a: HybridInt[-1] = HybridInt[-2](0,3).to_unital()
+    #var a: HybridInt[-1] = HybridInt[-2](0,3).to_unital()
     #print(HybridIntLiteral[-2](0,3).to_unital())
     #print(HybridFloatLiteral[-2](0,3).to_unital())
     #print(HybridInt[-2](0,3).to_unital())
@@ -288,8 +288,8 @@ fn test_math():
     print(HyperplexInt64(6,3).min_coef(), "<", HyperplexInt64(6,3).max_coef())
     print()
     print("#--- reduce_min & reduce_max")
-    let reduce_1 = HybridSIMD[DType.float64,4,-1](    Complex64(2,3),     Complex64(3,1),     Complex64(4,1),     Complex64(5,1))
-    let reduce_2 = HybridSIMD[DType.float64,4, 2](SuperHyperplex64(2,0), SuperHyperplex64(3,1), SuperHyperplex64(4,1), SuperHyperplex64(5,1))
+    var reduce_1 = HybridSIMD[DType.float64,4,-1](    Complex64(2,3),     Complex64(3,1),     Complex64(4,1),     Complex64(5,1))
+    var reduce_2 = HybridSIMD[DType.float64,4, 2](SuperHyperplex64(2,0), SuperHyperplex64(3,1), SuperHyperplex64(4,1), SuperHyperplex64(5,1))
     print(reduce_1.reduce_min(), "<", reduce_1.reduce_max())
     print(reduce_2.reduce_min(), "<", reduce_2.reduce_max())
     print()
@@ -319,9 +319,9 @@ fn test_math():
     print("1.0  = ", (Complex64(1,-2)/Complex64(1,-2)))
     print("1.0  = ", (Paraplex64(1,-2)/Paraplex64(1,-2)))
     print("1.0  = ", (Hyperplex64(1,-2)/Hyperplex64(1,-2)))
-    let div_complex = (Complex64(1,-2)/Complex64(-3,8))*Complex64(0,1)
-    let div_paraplex = (Paraplex64(1,-2)/Paraplex64(-3,8))*Paraplex64(0,1)
-    let div_hyperplex = (Hyperplex64(1,-2)/Hyperplex64(-3,8))*Hyperplex64(0,1)
+    var div_complex = (Complex64(1,-2)/Complex64(-3,8))*Complex64(0,1)
+    var div_paraplex = (Paraplex64(1,-2)/Paraplex64(-3,8))*Paraplex64(0,1)
+    var div_hyperplex = (Hyperplex64(1,-2)/Hyperplex64(-3,8))*Hyperplex64(0,1)
     print(div_complex, "that", div_paraplex, "this", div_hyperplex, "and lots of digits")
     print("i =  ", (div_complex*Complex64(-3,8)/Complex64(1,-2)))
     print("o =  ", (div_paraplex*Paraplex64(-3,8)/Paraplex64(1,-2)))
@@ -346,7 +346,7 @@ fn test_math():
     print(" 0 =  ", (Multiplex64(0,0,1,0)*Multiplex64(0,0,1,0)))
     print(" 1 =  ", (Multiplex64(0,0,0,1)*Multiplex64(0,0,0,1)))
     print(" 1 =  ", (Multiplex64(0,0,1,1)*Multiplex64(0,0,1,1)))
-    let multiplex = Multiplex64(10,2,3,4) / Multiplex64(-4,3,2,1)
+    var multiplex = Multiplex64(10,2,3,4) / Multiplex64(-4,3,2,1)
     print(multiplex)
     print("10 + 2i + 3o + 4x =  ", (multiplex*Multiplex64(-4,3,2,1)))
 

@@ -2,8 +2,8 @@
 Implements a hybrid integer type, parameterized on the antiox squared.
 """
 
-from ..moio import *
-from ..momath import *
+from ..io import *
+from ..math import *
 
 alias ComplexInt = HybridInt[-1]
 alias ParaplexInt = HybridInt[0]
@@ -35,13 +35,12 @@ struct HybridInt[square: Int](Stringable):
     alias Coef = Int
     """Represents an integer coefficient."""
 
-    #alias unital_square: IntLiteral = sign(square)
-    #"""The normalized square."""
+    alias unital_square: Int = sign(square)
+    """The normalized square."""
 
 
     #------< Data >------#
     #
-    
     var s: Self.Coef
     """The scalar part."""
 
@@ -60,8 +59,6 @@ struct HybridInt[square: Int](Stringable):
     fn __init__(h: HybridIntLiteral[square]) -> Self:
         """Initializes a HybridInt from a HybridIntLiteral."""
         return Self{s:h.s, a:h.a} 
-
-
     
     
     #------( To )------#
@@ -76,17 +73,13 @@ struct HybridInt[square: Int](Stringable):
         """Creates a non-algebraic StaticTuple from the hybrids parts."""
         return StaticTuple[2, Self.Coef](self.s, self.a)
 
-    # to_unital is being really screwed up so guess i wont add it yet
-    # @always_inline
-    # fn to_unital[unital_square: SIMD[type,1] = Self.unital_square](self) -> HybridSIMD[DType.float64,1,unital_square]:
-    #     """Unitize the HybridInt, this normalizes the square and adjusts the antiox coefficient."""
-    #     @parameter
-    #     if Self.unital_square == 1: return HybridSIMD[DType.float64,1,unital_square](self.s, self.a * sqrt(SIMD[DType.float64,1](square)))
-    #     elif Self.unital_square == -1: return HybridSIMD[DType.float64,1,unital_square](self.s, self.a * sqrt(SIMD[DType.float64,1](-square)))
-    #     elif Self.unital_square == 0: return HybridSIMD[DType.float64,1,unital_square](self.s, self.a)
-    #     else:
-    #         print("something went wrong (could not unitize hybrid)")
-    #         return 0
+    @always_inline
+    fn to_unital(self) -> HybridSIMD[DType.float64,1,Self.unital_square]:
+        """Unitize the HybridInt, this normalizes the square and adjusts the antiox coefficient."""
+        @parameter
+        if Self.unital_square == 1: return HybridSIMD[DType.float64,1,Self.unital_square](self.s, self.a * sqrt(SIMD[DType.float64,1](square)))
+        elif Self.unital_square == -1: return HybridSIMD[DType.float64,1,Self.unital_square](self.s, self.a * sqrt(SIMD[DType.float64,1](-square)))
+        else: return HybridSIMD[DType.float64,1,Self.unital_square](self.s, self.a)
 
 
     #------( Formatting )------#
