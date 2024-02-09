@@ -1,14 +1,12 @@
 """
-Implements the momath module.
+Implements the moplex math module.
 
-Defines hybrid math functions.
+Defines generalized complex math functions.
 """
 
-from math import nan, isnan
 from ..sequences import constants
 
 # improve literal math
-
 # some of this is just wrapping stlib functions, but will get more filled out.
 
 
@@ -204,9 +202,9 @@ fn expa[type: DType, size: Int, square: SIMD[type,1]](value: SIMD[type, size]) -
         A SIMD vector containing e raised to the power Antiox(Xi) where Xi is an element in the input SIMD vector.
     """
     @parameter
-    if square == 1: return HybridSIMD[type, size, square](cosh(value), sinh(value))
-    elif square == -1: return HybridSIMD[type, size, square](cos(value), sin(value))
+    if square == -1: return HybridSIMD[type, size, square](cos(value), sin(value))
     elif square == 0: return HybridSIMD[type, size, square](1, value)
+    elif square == 1: return HybridSIMD[type, size, square](cosh(value), sinh(value))
 
     var convert = sqrt(square) # not sure if this works
     if square > 0: return HybridSIMD[type, size, square](cosh(value*convert), sinh(value*convert)/convert)
@@ -752,8 +750,7 @@ fn min(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
 @always_inline
 fn min[square: Int](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[square]:
     """Return the value which is closest to negative infinity."""
-    if a < b: return a
-    return b
+    return a if a < b else b
 
 @always_inline
 fn min[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
@@ -762,17 +759,17 @@ fn min[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, s
     var b_denomer = b.denomer()
     var nans = isnan(a_denomer) or isnan(b_denomer)
     var cond = a < b
-    return select(nans, HybridSIMD[type, size, square](nan[type](), nan[type]()), select(cond, a, b))
+    return select[size=size](nans, nan[type, square](), select(cond, a, b))
 
-# @always_inline
-# fn min[square: IntLiteral](a: HybridIntLiteral[square], b: HybridIntLiteral[square]) -> HybridIntLiteral[square]:
-#     if a < b: return a
-#     return b
+@always_inline
+fn min[square: IntLiteral](a: HybridIntLiteral[square], b: HybridIntLiteral[square]) -> HybridIntLiteral[square]:
+    if a < b: return a
+    return b
 
-# @always_inline
-# fn min[square: FloatLiteral](a: HybridFloatLiteral[square], b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
-#     if a < b: return a
-#     return b
+@always_inline
+fn min[square: FloatLiteral](a: HybridFloatLiteral[square], b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
+    if a < b: return a
+    return b
 
 
 
@@ -807,8 +804,7 @@ fn max(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
 @always_inline
 fn max[square: Int](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[square]:
     """Return the value which is closest to positive infinity."""
-    if a > b: return a
-    return b
+    return a if a > b else b
 
 @always_inline
 fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
@@ -817,8 +813,39 @@ fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, s
     var b_denomer = b.denomer()
     var nans = isnan(a_denomer) or isnan(b_denomer)
     var cond = a > b
-    return select(nans, HybridSIMD[type, size, square](nan[type](), nan[type]()), select(cond, a, b))
+    return select[size=size](nans, nan[type,square](), select(cond, a, b))
 
+
+
+
+#------( NaN )------#
+#
+from math import nan as _nan
+from math import isnan as _isnan
+
+@always_inline
+fn nan[type: DType]() -> SIMD[type,1]:
+    return _nan[type]()
+
+@always_inline
+fn nan[type: DType, square: SIMD[type,1]]() -> HybridSIMD[type,1,square]:
+    return HybridSIMD[type,1,square](_nan[type](), _nan[type]())
+
+@always_inline
+fn nan_multiplex[type: DType]() -> MultiplexSIMD[type,1]:
+    return MultiplexSIMD[type,1](_nan[type](), _nan[type](), _nan[type](), _nan[type]())
+
+@always_inline
+fn isnan(value: SIMD) -> Bool:
+    return _isnan(value)
+
+@always_inline
+fn isnan[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> Bool:
+    return _isnan(value.s) or _isnan(value.a)
+
+@always_inline
+fn isnan(value: MultiplexSIMD) -> Bool:
+    return _isnan(value.s) or _isnan(value.i) or _isnan(value.o) or _isnan(value.x)
 
 
 
@@ -833,23 +860,24 @@ fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, s
 
 @always_inline
 fn to_int_literal[value: Int]() -> IntLiteral:
+    var result: IntLiteral
+    alias n = abs(value)
+
     @parameter
-    if value == 0: return 0
-    elif value == 1: return 1
-    elif value == -1: return -1
-    elif value == 2: return 2
-    elif value == -2: return -2
-    elif value == 3: return 3
-    elif value == -3: return -3
-    elif value == 4: return 4
-    elif value == -4: return -4
-    elif value == 5: return 5
-    elif value == -5: return -5
-    elif value == 6: return 6
-    elif value == -6: return -6
+    if n == 0: result = 0
+    elif n == 1: result = 1
+    elif n == 2: result = 2
+    elif n == 3: result = 3
+    elif n == 4: result = 4
+    elif n == 5: result = 5
+    elif n == 6: result = 6
     else:
         print("oh no")
         return 0
+
+    @parameter
+    if value < 0: return -result
+    else: return result
 
 
 

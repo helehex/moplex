@@ -1,7 +1,7 @@
 """
-Implements the moio module.
+Implements the moplex io module.
 
-Defines more io functions.
+Defines io functions for generalized complex numbers.
 """
 
 # get the symbol for formatting

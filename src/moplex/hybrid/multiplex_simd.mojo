@@ -21,7 +21,7 @@ alias Multiplex64     = MultiplexSIMD[DType.float64]
 
 
 @register_passable("trivial")
-struct MultiplexSIMD[type: DType, size: Int = 1](Stringable):
+struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable):
     """
     Represents a multiplex simd type.
     
