@@ -328,7 +328,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable):
     # fn characterize() -> StaticIntTuple[2]
 
     # @always_inline
-    # fn argument[interval: Int = 0](self) -> Self.Coef:
+    # fn argument[branch: Int = 0](self) -> Self.Coef:
     #     """Gets the argument of this multiplex number."""
     #     var m = self.antidenomer()
     #     if m < 0:

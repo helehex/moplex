@@ -469,12 +469,12 @@ struct HybridSIMD[type: DType, size: Int = simdwidthof[type](), square: SIMD[typ
         return abs(self.s)
 
     @always_inline
-    fn argument[interval: Int = 0](self) -> Self.Coef:
+    fn argument[branch: Int = 0](self) -> Self.Coef:
         """Gets the argument of this hybrid number. *Work in progress, may change."""
         @parameter
-        if square == 1: return log(abs(self.s + self.a) / self.measure[True]())
-        elif square == -1: return atan2(self.a, self.s) + interval*tau
+        if square == -1: return atan2(self.a, self.s) + branch*tau
         elif square == 0: return self.a/self.s
+        elif square == 1: return log(abs(self.s + self.a) / self.measure[True]())
         else:
             print("not implemented in general case, maybe unitize would work but it's broken")
             return 0

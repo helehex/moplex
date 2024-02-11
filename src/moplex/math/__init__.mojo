@@ -256,7 +256,7 @@ fn log(value: SIMD) -> SIMD[value.type, value.size]:
     return _log(value)
 
 @always_inline
-fn log[type: DType, size: Int, square: SIMD[type,1], interval: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn log[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Performs elementwise natural log (base E) of a HybridSIMD vector.
 
@@ -266,7 +266,8 @@ fn log[type: DType, size: Int, square: SIMD[type,1], interval: Int = 0](value: H
     Returns:
         Vector containing result of performing natural log base E on x.
     """
-    return HybridSIMD[type,size,square](log(value.measure[True]()), value.argument[interval]())
+    return HybridSIMD[type,size,square](log(value.measure[True]()), value.argument[branch]())
+
 
 
 
@@ -369,7 +370,7 @@ fn pow[type: DType, size: Int, square: SIMD[type,1]](a: SIMD[type,size], b: Hybr
     return exp(b*log(a))
 
 @always_inline
-fn pow[type: DType, size: Int, square: SIMD[type,1], interval: Int = 0](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn pow[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Computes elementwise power of a HybridSIMD type raised to another HybridSIMD type.
 
@@ -377,7 +378,7 @@ fn pow[type: DType, size: Int, square: SIMD[type,1], interval: Int = 0](a: Hybri
         type: The dtype of the HybridSIMD vectors.
         size: The width of the input and output SIMD vectors.
         square: The antiox squared of the input hybrid numbers.
-        interval: The multivariant interval to propagate.
+        branch: The multivalue branch to propagate.
 
     Args:
         a: Base of the power operation.
@@ -388,7 +389,15 @@ fn pow[type: DType, size: Int, square: SIMD[type,1], interval: Int = 0](a: Hybri
     """
     @parameter
     if square == 0: return pow(a.s, b.s-1) * HybridSIMD[type,size,square](a.s, b.a*a.s*log(a.s) + a.a*b.s)
-    return exp(b*log[interval = interval](a))
+    return exp(b*log[branch = branch](a))
+
+
+
+
+# #------( Lambert W )------#
+# #
+# @always_inline
+# fn lw[branch: ](): pass
 
 
 

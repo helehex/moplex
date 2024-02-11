@@ -287,10 +287,10 @@ struct HybridIntLiteral[square: Int](Stringable):
         return abs(self.s)
 
     @always_inline
-    fn argument[interval: Int = 0](self) -> FloatLiteral:
+    fn argument[branch: Int = 0](self) -> FloatLiteral:
         """Gets the argument of this hybrid number. *Work in progress, may change."""
         @parameter
-        if square == -1: return atan2(FloatLiteral(self.a), FloatLiteral(self.s)) + interval*tau
+        if square == -1: return atan2(FloatLiteral(self.a), FloatLiteral(self.s)) + branch*tau
         elif square == 0: return FloatLiteral(self.a)/FloatLiteral(self.s)
         elif square == 1: return log(abs(self.s + self.a) / self.measure[True]())
         else:
