@@ -1,13 +1,13 @@
 from sys import argv
 from moplex.hybrid.test import test_math
 from example import example_code
-from bench import bench
+from bench import bench_hybrid, bench_multiplex
 
 fn main():
     var command = argv()
 
     if len(command) > 1 and command[1] == "temp": temp()
-    if len(command) > 1 and command[1] == "bench": bench()
+    if len(command) > 1 and command[1] == "bench": bench_multiplex()
     if len(command) == 1 or command[1] == "example": example_code()
     if len(command) == 1 or command[1] == "test": test_math()
     
