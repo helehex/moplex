@@ -233,44 +233,6 @@ fn exp[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type, siz
 
 
 
-#------ Logarithm ------#
-#
-from math import log as _log
-
-@always_inline # mock std
-fn log(value: FloatLiteral) -> FloatLiteral:
-    """Returns the logarithm of the input FloatLiteral. May change."""
-    return log[DType.float64,1](value).value
-
-@always_inline # mock
-fn log(value: SIMD) -> SIMD[value.type, value.size]:
-    """
-    Performs elementwise natural log (base E) of a SIMD vector.
-
-    Args:
-        value: Vector to perform logarithm operation on.
-
-    Returns:
-        Vector containing result of performing natural log base E on x.
-    """
-    return _log(value)
-
-@always_inline
-fn log[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
-    """
-    Performs elementwise natural log (base E) of a HybridSIMD vector.
-
-    Args:
-        value: Vector to perform logarithm operation on.
-
-    Returns:
-        Vector containing result of performing natural log base E on x.
-    """
-    return HybridSIMD[type,size,square](log(value.measure[True]()), value.argument[branch]())
-
-
-
-
 #------ Power ------#
 #
 from math import pow as _pow
@@ -390,6 +352,44 @@ fn pow[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](a: HybridS
     @parameter
     if square == 0: return pow(a.s, b.s-1) * HybridSIMD[type,size,square](a.s, b.a*a.s*log(a.s) + a.a*b.s)
     return exp(b*log[branch = branch](a))
+
+
+
+
+#------ Logarithm ------#
+#
+from math import log as _log
+
+@always_inline # mock std
+fn log(value: FloatLiteral) -> FloatLiteral:
+    """Returns the logarithm of the input FloatLiteral. May change."""
+    return log[DType.float64,1](value).value
+
+@always_inline # mock
+fn log(value: SIMD) -> SIMD[value.type, value.size]:
+    """
+    Performs elementwise natural log (base E) of a SIMD vector.
+
+    Args:
+        value: Vector to perform logarithm operation on.
+
+    Returns:
+        Vector containing result of performing natural log base E on x.
+    """
+    return _log(value)
+
+@always_inline
+fn log[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """
+    Performs elementwise natural log (base E) of a HybridSIMD vector.
+
+    Args:
+        value: Vector to perform logarithm operation on.
+
+    Returns:
+        Vector containing result of performing natural log base E on x.
+    """
+    return HybridSIMD[type,size,square](log(value.measure[True]()), value.argument[branch]())
 
 
 
