@@ -13,20 +13,15 @@ fn main():
     
 
 
-from moplex import HybridInt, HybridSIMD
+from moplex import HybridIntLiteral, HybridFloatLiteral, HybridInt, HybridSIMD
 from moplex.random import rand, random_frac, random_sign
 from moplex.math import sin, expa
 from math import copysign
 
 fn temp():
     print("temp code:\n")
-    #print(rand[DType.float32,8,1]())
-    # var a = random_frac[DType.float32,16,-1]()
-    # print(a)
-    # print(a.measure())
-
-    var count: Int = 0
-    var amount: Int = 1000
-    for i in range(amount):
-        if random_frac[DType.float64,1,1]().measure() > 0.5: count += 1
-    print(count, " / ", amount)
+    var a = HybridSIMD[DType.float64,1,-1](-10,5)
+    print(a, ",", a.argument())
+    a = a.normalized()
+    print(a, ",", a.argument())
+    print(a.measure())

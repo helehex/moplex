@@ -2,23 +2,24 @@ from ..math import *
 
 alias simd_type: DType = DType.float64
 alias simd_size = 4
+alias square = 1
 
 fn static_test():
 
     var int_literal: IntLiteral = IntLiteral(2)
-    var hybrid_int_literal: HybridIntLiteral[1] = HybridIntLiteral[1](2)
+    var hybrid_int_literal: HybridIntLiteral[square] = HybridIntLiteral[square](2)
 
     var float_literal: FloatLiteral = FloatLiteral(2)
-    var hybrid_float_literal: HybridFloatLiteral[1] = HybridFloatLiteral[1](2)
+    var hybrid_float_literal: HybridFloatLiteral[square] = HybridFloatLiteral[square](2)
 
     var int: Int = Int(2)
-    var hybrid_int: HybridInt[1] = HybridInt[1](2,1)
+    var hybrid_int: HybridInt[square] = HybridInt[square](2,1)
 
     var float: SIMD[simd_type,1] = SIMD[simd_type,1](2)
-    var hybrid_float: HybridSIMD[simd_type,1] = HybridSIMD[simd_type,1](2)
+    var hybrid_float: HybridSIMD[simd_type,1,square] = HybridSIMD[simd_type,1,square](2)
 
     var simd: SIMD[simd_type,simd_size] = SIMD[simd_type,simd_size](2)
-    var hybrid_simd: HybridSIMD[simd_type,simd_size] = HybridSIMD[simd_type,simd_size](2)
+    var hybrid_simd: HybridSIMD[simd_type,simd_size,square] = HybridSIMD[simd_type,simd_size,square](2)
 
     var multiplex: MultiplexSIMD[simd_type,simd_size] = MultiplexSIMD[simd_type,simd_size](2)
 
@@ -26,7 +27,7 @@ fn static_test():
     #------ hybrid_int_literal ------#
     #
     hybrid_int_literal = int_literal
-    hybrid_int_literal = HybridIntLiteral[1](2,2)
+    hybrid_int_literal = HybridIntLiteral[square](2,2)
 
     hybrid_int_literal = hybrid_int_literal + int_literal
     hybrid_int_literal = int_literal + hybrid_int_literal
@@ -45,10 +46,13 @@ fn static_test():
     hybrid_float_literal = int_literal
     hybrid_float_literal = hybrid_int_literal
     hybrid_float_literal = float_literal
-    hybrid_float_literal = HybridFloatLiteral[1](2,2)
+    hybrid_float_literal = HybridFloatLiteral[square](2,2)
 
     hybrid_float_literal = hybrid_float_literal + int_literal
     hybrid_float_literal = int_literal + hybrid_float_literal
+
+    hybrid_float_literal = hybrid_int_literal + float_literal
+    hybrid_float_literal = float_literal + hybrid_int_literal
 
     hybrid_float_literal = hybrid_float_literal + hybrid_int_literal
     hybrid_float_literal = hybrid_int_literal + hybrid_float_literal
@@ -71,7 +75,7 @@ fn static_test():
     hybrid_int = int_literal
     hybrid_int = hybrid_int_literal
     hybrid_int = int
-    hybrid_int = HybridInt[1](2,2)
+    hybrid_int = HybridInt[square](2,2)
 
 
     hybrid_int = hybrid_int + int_literal
@@ -101,7 +105,7 @@ fn static_test():
     hybrid_simd = hybrid_int
     hybrid_simd = float
     hybrid_simd = hybrid_float
-    hybrid_simd = HybridSIMD[simd_type,simd_size].__init__(float,float)
+    hybrid_simd = HybridSIMD[simd_type,simd_size,square].__init__(float,float)
 
     hybrid_simd = hybrid_simd + int_literal
     hybrid_simd = int_literal + hybrid_simd
@@ -120,6 +124,14 @@ fn static_test():
 
     hybrid_simd = hybrid_simd + hybrid_int
     hybrid_simd = hybrid_int + hybrid_simd
+
+    # # These are causing cannot cast to same type errors
+
+    # hybrid_simd = float + hybrid_int
+    # hybrid_simd = hybrid_int + float
+
+    # hybrid_simd = simd + hybrid_int
+    # hybrid_simd = hybrid_int + simd
 
     hybrid_simd = hybrid_simd + float
     hybrid_simd = float + hybrid_simd

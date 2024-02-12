@@ -298,6 +298,10 @@ struct HybridInt[square: Int](Stringable):
             print("not implemented in general case, maybe unitize would work but it's broken")
             return 0
 
+    @always_inline
+    fn normalized(self) -> HybridSIMD[DType.float64,1,square]:
+        return self / self.measure()
+
 
     #------( Products )------#
     #
@@ -344,6 +348,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Hybrid + Scalar
     fn __add__(self, other: Self.Coef) -> Self:
         return Self(self.s + other, self.a)
+
+    @always_inline # Hybrid + Scalar
+    fn __add__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return HybridSIMD[type,size,square](self) + other
     
     @always_inline # Hybrid + Hybrid
     fn __add__(self, other: Self) -> Self:
@@ -354,6 +362,10 @@ struct HybridInt[square: Int](Stringable):
     fn __sub__(self, other: Self.Coef) -> Self:
         return Self(self.s - other, self.a)
     
+    @always_inline # Hybrid - Scalar
+    fn __sub__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return HybridSIMD[type,size,square](self) - other
+
     @always_inline # Hybrid - Hybrid
     fn __sub__(self, other: Self) -> Self:
         return Self(self.s - other.s, self.a - other.a)
@@ -362,6 +374,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Hybrid * Scalar
     fn __mul__(self, other: Self.Coef) -> Self:
         return Self(self.s*other, self.a*other)
+
+    @always_inline # Hybrid * Scalar
+    fn __mul__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return HybridSIMD[type,size,square](self) * other
 
     @always_inline # Hybrid * Hybrid
     fn __mul__(self, other: Self) -> Self:
@@ -372,6 +388,10 @@ struct HybridInt[square: Int](Stringable):
     fn __truediv__(self, other: Self.Coef) -> HybridSIMD[DType.float64,1,square]:
         return HybridSIMD[DType.float64,1,square](self) * (1/other)
 
+    @always_inline # Hybrid / Scalar
+    fn __truediv__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return HybridSIMD[type,size,square](self) / other
+
     @always_inline # Hybrid / Hybrid
     fn __truediv__(self, other: Self) -> HybridSIMD[DType.float64,1,square]:
         return self*other.conjugate() / other.denomer()
@@ -379,6 +399,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Hybrid // Scalar
     fn __floordiv__(self, other: Self.Coef) -> Self:
         return Self(self.s // other, self.a // other)
+
+    @always_inline # Hybrid // Scalar
+    fn __floordiv__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return HybridSIMD[type,size,square](self) // other
 
     @always_inline # Hybrid // Hybrid
     fn __floordiv__(self, other: Self) -> Self:
@@ -388,6 +412,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Hybrid ** Scalar
     fn __pow__(self, other: Self.Coef) -> HybridSIMD[DType.float64,1,square]:
         return pow[DType.float64,1,square](self, other)
+
+    @always_inline # Hybrid ** Scalar
+    fn __pow__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return HybridSIMD[type,size,square](self) ** other
 
     @always_inline # Hybrid ** Hybrid
     fn __pow__(self, other: Self) -> HybridSIMD[DType.float64,1,square]:
@@ -401,6 +429,10 @@ struct HybridInt[square: Int](Stringable):
     fn __radd__(self, other: Self.Coef) -> Self:
         return Self(other + self.s, self.a)
 
+    @always_inline # Hybrid + Scalar
+    fn __radd__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return other + HybridSIMD[type,size,square](self)
+
     @always_inline # Hybrid + Hybrid
     fn __radd__(self, other: Self) -> Self:
         return other + self
@@ -409,6 +441,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Scalar - Hybrid
     fn __rsub__(self, other: Self.Coef) -> Self:
         return Self(other - self.s, -self.a)
+
+    @always_inline # Hybrid - Scalar
+    fn __rsub__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return other - HybridSIMD[type,size,square](self)
 
     @always_inline # Hybrid - Hybrid
     fn __rsub__(self, other: Self) -> Self:
@@ -419,6 +455,10 @@ struct HybridInt[square: Int](Stringable):
     fn __rmul__(self, other: Self.Coef) -> Self:
         return Self(other * self.s, other * self.a)
 
+    @always_inline # Hybrid * Scalar
+    fn __rmul__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return other * HybridSIMD[type,size,square](self)
+
     @always_inline # Hybrid * Hybrid
     fn __rmul__(self, other: Self) -> Self:
         return other * self
@@ -428,6 +468,10 @@ struct HybridInt[square: Int](Stringable):
     fn __rtruediv__(self, other: Self.Coef) -> HybridSIMD[DType.float64,1,square]:
         return other*self.conjugate() / self.denomer()
 
+    @always_inline # Hybrid / Scalar
+    fn __rtruediv__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return other / HybridSIMD[type,size,square](self)
+
     @always_inline # Hybrid / Hybrid
     fn __rtruediv__(self, other: Self) -> HybridSIMD[DType.float64,1,square]:
         return other / self
@@ -435,6 +479,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Scalar // Hybrid
     fn __rfloordiv__(self, other: Self.Coef) -> Self:
         return other*self.conjugate() // self.denomer()
+
+    @always_inline # Hybrid // Scalar
+    fn __rfloordiv__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return other // HybridSIMD[type,size,square](self)
 
     @always_inline # Hybrid // Hybrid
     fn __rfloordiv__(self, other: Self) -> Self:
@@ -444,6 +492,10 @@ struct HybridInt[square: Int](Stringable):
     @always_inline # Scalar ** Hybrid
     fn __rpow__(self, other: Self.Coef) -> HybridSIMD[DType.float64,1,square]:
         return pow[DType.float64,1,square](other, self)
+
+    @always_inline # Hybrid ** Scalar
+    fn __rpow__[type: DType = DType.float64, size: Int = 1](self, other: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+        return other ** HybridSIMD[type,size,square](self)
 
     @always_inline # Hybrid ** Hybrid
     fn __rpow__(self, other: Self) -> HybridSIMD[DType.float64,1,square]:

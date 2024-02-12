@@ -479,6 +479,10 @@ struct HybridSIMD[type: DType, size: Int = simdwidthof[type](), square: SIMD[typ
             print("not implemented in general case, maybe unitize would work but it's broken")
             return 0
 
+    @always_inline
+    fn normalized(self) -> Self:
+        return self / self.measure()
+
 
     #------( Products )------#
     #

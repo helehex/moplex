@@ -23,7 +23,7 @@ fn constrain_square[a: FloatLiteral, b: Int]():
 #---
 #---
 @register_passable("trivial")
-struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
+struct HybridFloatLiteral[square: FloatLiteral](Stringable):
     """
     Represent a hybrid floating point literal with scalar and antiox parts.
 
@@ -67,7 +67,7 @@ struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
         return Self{s:s, a:0}
 
     @always_inline # Hybrid
-    fn __init__(h: HybridIntLiteral[square.to_int()]) -> Self:
+    fn __init__(h: HybridIntLiteral) -> Self:
         """Initializes a HybridFloatLiteral from a HybridIntLiteral."""
         constrain_square[square, h.square]()
         return Self{s:h.s, a:h.a}
@@ -309,6 +309,10 @@ struct HybridFloatLiteral[square: FloatLiteral = -1](Stringable):
         else:
             print("not implemented in general case, maybe unitize would work but it's broken")
             return 0
+
+    @always_inline
+    fn normalized(self) -> Self:
+        return self / self.measure()
 
 
     #------( Products )------#
