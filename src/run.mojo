@@ -15,7 +15,7 @@ fn main():
 
 from moplex import HybridIntLiteral, HybridFloatLiteral, HybridInt, HybridSIMD
 from moplex.random import rand, random_frac, random_sign
-from moplex.math import sin, expa
+from moplex.math import sin, cos, expa
 from math import copysign
 
 fn temp():

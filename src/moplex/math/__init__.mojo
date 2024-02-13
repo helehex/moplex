@@ -206,9 +206,15 @@ fn expa[type: DType, size: Int, square: SIMD[type,1]](value: SIMD[type, size]) -
     elif square == 0: return HybridSIMD[type, size, square](1, value)
     elif square == 1: return HybridSIMD[type, size, square](cosh(value), sinh(value))
 
-    var convert = sqrt(square) # not sure if this works
-    if square > 0: return HybridSIMD[type, size, square](cosh(value*convert), sinh(value*convert)/convert)
-    else: return HybridSIMD[type, size, square](cos(value*convert), sin(value*convert)/convert)
+    @parameter
+    if square > 0:
+        var conversion = sqrt(square)
+        var result = expa[type,size,1](value*conversion)
+        return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    else:
+        var conversion = sqrt(-square)
+        var result = expa[type,size,-1](value*conversion)
+        return HybridSIMD[type, size, square](result.s, result.a/conversion)
 
 @always_inline
 fn exp[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
@@ -416,6 +422,24 @@ fn sin(value: SIMD) -> SIMD[value.type, value.size]:
     """Mocks stdlib. Computes sine of the input."""
     return _sin(value)
 
+@always_inline
+fn sin[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    @parameter
+    if square == -1: return HybridSIMD[type,size,square](sin(value.s) * cosh(value.a), cos(value.s) * sinh(value.a))
+    elif square == 0: return HybridSIMD[type,size,square](sin(value.s), value.a * cos(value.s))
+    elif square == 1: return HybridSIMD[type,size,square](sin(value.s) * sinh(value.a), cos(value.s) * cosh(value.a))
+
+    @parameter
+    if square > 0:
+        var conversion = sqrt(square)
+        var result = sin(HybridSIMD[type, size, 1](value.s, value.a*conversion))
+        return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    else:
+        var conversion = sqrt(-square)
+        var result = sin(HybridSIMD[type, size, -1](value.s, value.a*conversion))
+        return HybridSIMD[type, size, square](result.s, result.a/conversion)
+
+
 
 
 
@@ -432,6 +456,23 @@ fn cos(value: FloatLiteral) -> FloatLiteral:
 fn cos(value: SIMD) -> SIMD[value.type, value.size]:
     """Mocks stdlib. Computes cosine of the input."""
     return _cos(value)
+
+@always_inline
+fn cos[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    @parameter
+    if square == -1: return HybridSIMD[type,size,square](cos(value.s) * cosh(value.a), -sin(value.s) * sinh(value.a))
+    elif square == 0: return HybridSIMD[type,size,square](cos(value.s), -value.a * sin(value.s))
+    elif square == 1: return HybridSIMD[type,size,square](cos(value.s) * sinh(value.a), -sin(value.s) * cosh(value.a))
+
+    @parameter
+    if square > 0:
+        var conversion = sqrt(square)
+        var result = sin(HybridSIMD[type, size, 1](value.s, value.a*conversion))
+        return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    else:
+        var conversion = sqrt(-square)
+        var result = sin(HybridSIMD[type, size, -1](value.s, value.a*conversion))
+        return HybridSIMD[type, size, square](result.s, result.a/conversion)
 
 
 
