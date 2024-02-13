@@ -15,13 +15,13 @@ fn main():
 
 from moplex import HybridIntLiteral, HybridFloatLiteral, HybridInt, HybridSIMD
 from moplex.random import rand, random_frac, random_sign
-from moplex.math import sin, cos, expa
+from moplex.math import sin, cos, cot, tan, expa
 from math import copysign
-from moplex.sequences import tau
+from moplex.sequences import tau, pi
 
 fn temp():
-    print(expa[square = -0.5](SIMD[DType.float64,1](tau/4)))
-    # print(cos(HybridSIMD[DType.float64,1,-1](1,1)))
+    # print(expa[square = -0.5](SIMD[DType.float64,1](tau/4)))
+    print(cot(HybridSIMD[DType.float64,1,-1](tau,0)))
     # print("temp code:\n")
     # var a = HybridSIMD[DType.float64,1,-1](-10,5)
     # print(a, ",", a.argument())

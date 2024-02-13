@@ -6,9 +6,6 @@ Defines generalized complex math functions.
 
 from ..sequences import constants
 
-# improve literal math
-# some of this is just wrapping stlib functions, but will get more filled out.
-
 
 
 
@@ -430,7 +427,6 @@ fn sin[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 
 
 
-
 #------ Cosine ------#
 #
 from math import cos as _cos
@@ -472,6 +468,77 @@ fn tan(value: FloatLiteral) -> FloatLiteral:
 fn tan(value: SIMD) -> SIMD[value.type, value.size]:
     """Mocks stdlib. Computes tangent of the input."""
     return _tan(value)
+
+@always_inline
+fn tan[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """Computes tangent of the input."""
+    # check for optimizations
+    @parameter
+    if square == -1: return HybridSIMD[type,size,square](sin(2*value.s), sinh(2*value.a)) / (cos(2*value.s) + cosh(2*value.a))
+    elif square == 0: return HybridSIMD[type,size,square](tan(value.s), (sec(value.s)**2) * value.a)
+    elif square == 1: return HybridSIMD[type,size,square](sin(2*value.s), sin(2*value.a)) / (cos(2*value.s) + cos(2*value.a))
+
+    var conversion = sqrt(abs[type,1,square]())
+    var result = tan(HybridSIMD[type, size, value.unital_square](value.s, value.a*conversion))
+    return HybridSIMD[type, size, square](result.s, result.a/conversion)
+
+
+
+
+#------( Cotangent )------#
+#
+@always_inline
+fn cot(value: FloatLiteral) -> FloatLiteral:
+    """Computes cotangent of the input."""
+    return tan(hfpi - value)
+
+@always_inline
+fn cot(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes cotangent of the input."""
+    return tan(hfpi - value)
+
+@always_inline
+fn cot[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """Computes cotangent of the input."""
+    # check for optimizations
+    @parameter
+    if square == -1: return (cos(2*value.s) + cosh(2*value.a)) / HybridSIMD[type,size,square](sin(2*value.s), sinh(2*value.a))
+    elif square == 0: return HybridSIMD[type,size,square](cot(value.s), -(csc(value.s)**2) * value.a)
+    elif square == 1: return (cos(2*value.s) + cos(2*value.a)) / HybridSIMD[type,size,square](sin(2*value.s), sin(2*value.a))
+
+    var conversion = sqrt(abs[type,1,square]())
+    var result = cot(HybridSIMD[type, size, value.unital_square](value.s, value.a*conversion))
+    return HybridSIMD[type, size, square](result.s, result.a/conversion)
+
+
+
+
+#------ Secant ------#
+#
+@always_inline
+fn sec(value: FloatLiteral) -> FloatLiteral:
+    """Computes secant of the input."""
+    return 1/cos(value)
+
+@always_inline
+fn sec(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes secant of the input."""
+    return 1/cos(value)
+
+
+
+
+#------ Cosecant ------#
+#
+@always_inline
+fn csc(value: FloatLiteral) -> FloatLiteral:
+    """Computes cosecant of the input."""
+    return 1/sin(value)
+
+@always_inline
+fn csc(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes cosecant of the input."""
+    return 1/sin(value)
 
 
 
@@ -526,6 +593,52 @@ fn tanh(value: SIMD) -> SIMD[value.type, value.size]:
 
 
 
+
+#------( Hyperbolic Cotangent )------#
+#
+@always_inline
+fn coth(value: FloatLiteral) -> FloatLiteral:
+    """Computes hyperbolic cotangent of the input."""
+    return 1/tanh(value)
+
+@always_inline
+fn coth(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes hyperbolic cotangent of the input."""
+    return 1/tanh(value)
+
+
+
+
+#------( Hyperbolic Secant )------#
+#
+@always_inline
+fn sech(value: FloatLiteral) -> FloatLiteral:
+    """Computes hyperbolic secant of the input."""
+    return 1/cosh(value)
+
+@always_inline
+fn sech(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes hyperbolic secant of the input."""
+    return 1/cosh(value)
+
+
+
+
+#------( Hyperbolic Cosecant )------#
+#
+@always_inline
+fn csch(value: FloatLiteral) -> FloatLiteral:
+    """Computes hyperbolic cosecant of the input."""
+    return 1/sinh(value)
+
+@always_inline
+fn csch(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes hyperbolic cosecant of the input."""
+    return 1/sinh(value)
+
+
+
+
 #------( Arcsine )------#
 #
 from math import asin as _asin
@@ -542,6 +655,7 @@ fn asin(value: SIMD) -> SIMD[value.type, value.size]:
 
 
 
+
 #------( Arccosine )------#
 #
 from math import acos as _acos
@@ -555,6 +669,7 @@ fn acos(value: FloatLiteral) -> FloatLiteral:
 fn acos(value: SIMD) -> SIMD[value.type, value.size]:
     """Mocks stdlib. Computes the arccosine of the input."""
     return _acos(value)
+
 
 
 
@@ -602,6 +717,7 @@ fn asinh(value: SIMD) -> SIMD[value.type, value.size]:
 
 
 
+
 #------( Hyperbolic Arccosine )------#
 #
 from math import acosh as _acosh
@@ -615,6 +731,7 @@ fn acosh(value: FloatLiteral) -> FloatLiteral:
 fn acosh(value: SIMD) -> SIMD[value.type, value.size]:
     """Mocks stdlib. Computes the hyperbolic arccosine of the input."""
     return _acosh(value)
+
 
 
 
