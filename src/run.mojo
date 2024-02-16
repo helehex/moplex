@@ -7,21 +7,26 @@ fn main():
     var command = argv()
 
     if len(command) > 1 and command[1] == "temp": temp()
-    if len(command) > 1 and command[1] == "bench": bench_multiplex()
+    if len(command) > 1 and command[1] == "bench": bench_hybrid()
     if len(command) == 1 or command[1] == "example": example_code()
     if len(command) == 1 or command[1] == "test": test_math()
-    
 
 
-from moplex import HybridIntLiteral, HybridFloatLiteral, HybridInt, HybridSIMD
-from moplex.random import rand, random_frac, random_sign
-from moplex.math import sin, cos, cot, tan, expa
-from math import copysign
-from moplex.sequences import tau, pi
+
+from moplex.hybrid import *
+from moplex.random import *
+from moplex.math import *
 
 fn temp():
+
+    # test lambert w function. works good, but still needs work, branch selection etc..
+    let h = HybridSIMD[DType.float64,1,-1](10, 5)
+    let lwh = lw(h)
+    print(lwh)
+    print(lwh*exp(lwh))
+
     # print(expa[square = -0.5](SIMD[DType.float64,1](tau/4)))
-    print(cot(HybridSIMD[DType.float64,1,-1](tau,0)))
+    # print(cot(HybridSIMD[DType.float64,1,-1](tau,0)))
     # print("temp code:\n")
     # var a = HybridSIMD[DType.float64,1,-1](-10,5)
     # print(a, ",", a.argument())

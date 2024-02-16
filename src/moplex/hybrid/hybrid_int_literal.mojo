@@ -2,9 +2,6 @@
 Implements a hybrid integer literal, parameterized on the antiox squared.
 """
 
-from ..io import *
-from ..math import *
-
 alias ComplexIntLiteral = HybridIntLiteral[-1]
 alias ParaplexIntLiteral = HybridIntLiteral[0]
 alias HyperplexIntLiteral = HybridIntLiteral[1]

@@ -2,9 +2,6 @@
 Implements hybrid types backed by SIMD vectors. Parameterized on the antiox squared.
 """
 
-from ..io import *
-from ..math import *
-
 alias ComplexInt8   = HybridSIMD[DType.int8,1,-1]
 alias ComplexUInt8  = HybridSIMD[DType.uint8,1,-1]
 alias ComplexInt16  = HybridSIMD[DType.int16,1,-1]
@@ -50,7 +47,7 @@ fn constrain_square[type: DType, a: SIMD[type,1], b: FloatLiteral](): constraine
 #---
 #---
 @register_passable("trivial")
-struct HybridSIMD[type: DType, size: Int = simdwidthof[type](), square: SIMD[type,1] = -1](Stringable):
+struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
     """
     Represents a hybrid small vector backed by hardware vector elements, with scalar and antiox parts.
 

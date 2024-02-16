@@ -6,10 +6,6 @@ Defines random generalized complex values.
 
 from memory import stack_allocation
 from math.limit import max_finite
-from ..hybrid import HybridSIMD
-from ..math import sqrt, expa, sin, cos
-from ..sequences.constants import tau
-
 from random import rand as _rand
 
 

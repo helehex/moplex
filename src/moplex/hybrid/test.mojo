@@ -1,5 +1,3 @@
-from ..math import *
-
 alias simd_type: DType = DType.float64
 alias simd_size = 4
 alias square = 1

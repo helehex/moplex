@@ -2,9 +2,6 @@
 The greater algebra containing Hyperplex, Complex, and Paraplex numbers.
 """
 
-from ..io import *
-from ..math import *
-
 alias MultiplexInt8   = MultiplexSIMD[DType.int8]
 alias MultiplexUInt8  = MultiplexSIMD[DType.uint8]
 alias MultiplexInt16  = MultiplexSIMD[DType.int16]
