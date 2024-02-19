@@ -128,6 +128,10 @@ fn sqrt(value: SIMD) -> SIMD[value.type, value.size]:
     """
     return _sqrt(value)
 
+@always_inline
+fn sqrt[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    return pow(value, 0.5)
+
 
 
 
@@ -153,6 +157,9 @@ fn rsqrt(value: SIMD) -> SIMD[value.type, value.size]:
     """
     return _rsqrt(value)
 
+@always_inline
+fn rsqrt[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    return pow(value, -0.5)
 
 
 
@@ -266,7 +273,6 @@ fn pow(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
     """Mocks stdlib."""
     return _pow(a, b)
 
-# more tweaking needed
 @always_inline
 fn pow[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type,size,square], b: Int) -> HybridSIMD[type,size,square]:
     """
@@ -305,8 +311,7 @@ fn pow[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type,size,squ
     """
     @parameter
     if square == 0: return pow(a.s, b-1) * HybridSIMD[type,size,square](a.s, a.a*b)
-    return pow(a.measure[True](),b)*expa[type,size,square](a.argument()*b)
-    #return exp(b*log(a))
+    return exp(b*log(a))
 
 @always_inline
 fn pow[type: DType, size: Int, square: SIMD[type,1]](a: SIMD[type,size], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
@@ -385,7 +390,9 @@ fn log[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: Hyb
     Returns:
         Vector containing result of performing natural log base E on x.
     """
-    return HybridSIMD[type,size,square](log(value.measure[True]()), value.argument[branch]())
+    @parameter
+    if square == 0: return HybridSIMD[type,size,square](log(value.measure()), value.argument[branch]())
+    return HybridSIMD[type,size,square](value.lmeasure[True](), value.argument[branch]())
 
 
 
@@ -403,7 +410,13 @@ fn _dxex[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,si
 
 @always_inline
 fn lw[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
-    return newtons_method[type, size, square, _xex[type,size,square], _dxex[type,size,square]](log(value + 1), value)
+    var guess: HybridSIMD[type,size,square]
+
+    @parameter # work out more branch selection
+    if branch == -1: guess = log(-value)*2
+    else: guess = log[branch=branch](value + 1)
+
+    return newtons_method[type, size, square, _xex[type,size,square], _dxex[type,size,square], 8, 1e-8](guess, value)
 
 
 
@@ -533,6 +546,11 @@ fn sec(value: SIMD) -> SIMD[value.type, value.size]:
     """Computes secant of the input."""
     return 1/cos(value)
 
+@always_inline
+fn sec[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """Computes secant of the input."""
+    return 1/cos(value)
+
 
 
 
@@ -545,6 +563,11 @@ fn csc(value: FloatLiteral) -> FloatLiteral:
 
 @always_inline
 fn csc(value: SIMD) -> SIMD[value.type, value.size]:
+    """Computes cosecant of the input."""
+    return 1/sin(value)
+
+@always_inline
+fn csc[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes cosecant of the input."""
     return 1/sin(value)
 

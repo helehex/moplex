@@ -19,17 +19,19 @@ from moplex.math import *
 
 fn temp():
 
-    # test lambert w function. works good, but still needs work, branch selection etc..
-    let h = HybridSIMD[DType.float64,1,-1](10, 5)
-    let lwh = lw(h)
-    print(lwh)
-    print(lwh*exp(lwh))
+    # find better way to handle imaginary measure on hyperplex numbers. pow behaves badly
 
-    # print(expa[square = -0.5](SIMD[DType.float64,1](tau/4)))
-    # print(cot(HybridSIMD[DType.float64,1,-1](tau,0)))
-    # print("temp code:\n")
-    # var a = HybridSIMD[DType.float64,1,-1](-10,5)
-    # print(a, ",", a.argument())
-    # a = a.normalized()
-    # print(a, ",", a.argument())
-    # print(a.measure())
+    print("temp\n")
+    var on = SIMD[DType.float64,1](0)
+    var no = SIMD[DType.float64,1](1)
+    var sq = SIMD[DType.float64,1](2)
+
+    print(Complex64(0,1)**on, "= 1")
+    print(Complex64(0,1)**no, "= 1i")
+    print(Complex64(0,1)**sq, "= -1")
+    print(Paraplex64(0,1)**on, "= 1")
+    print(Paraplex64(0,1)**no, "= 1o")
+    print(Paraplex64(0,1)**sq, "= 0")
+    print(Hyperplex64(0,1)**on, "= 1")
+    print(Hyperplex64(0,1)**no, "= 1x")
+    print(Hyperplex64(0,1)**sq, "= 1")

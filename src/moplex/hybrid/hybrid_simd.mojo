@@ -427,19 +427,19 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
         Equal to the measure squared for non-degenerate cases.
 
             # coefficient math:
-            Complex   -> c[0]*c[0] + c[1]*c[1]
-            Paraplex  -> c[0]*c[0]
-            Hyperplex -> c[0]*c[0] - c[1]*c[1]
+            Complex   -> [0]*[0] + [1]*[1]
+            Paraplex  -> [0]*[0]
+            Hyperplex -> [0]*[0] - [1]*[1]
 
         Parameters:
-            absolute: Setting this to true will ensure a positive result by taking the absolute value.
+            absolute: Setting this true will ensure a positive result.
 
         Returns:
             The hybrid denomer.
         """
         @parameter
         if absolute: return abs(self.inner(self))
-        return self.inner(self)
+        else: return self.inner(self)
 
     @always_inline
     fn measure[absolute: Bool = False](self) -> Self.Coef:
@@ -450,20 +450,47 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
 
         Equal to the square root of the denomer.
 
-            # coefficient math:
-            Complex   -> sqrt(c[0]*c[0] + c[1]*c[1])
-            Paraplex  -> sqrt(c[0]*c[0])
-            Hyperplex -> sqrt(c[0]*c[0] - c[1]*c[1])
-
         Parameters:
-            absolute: Setting this to true will ensure a positive result by using the absolute denomer.
+            absolute: Setting this true will ensure a definite result.
 
         Returns:
             The hybrid measure.
         """
         @parameter
-        if square != 0: return sqrt(self.denomer[absolute]())
-        return abs(self.s)
+        if square == 0: return abs(self.s)
+        else: return sqrt(self.denomer[absolute]())
+        
+
+    @always_inline
+    fn lmeasure[absolute: Bool = False](self) -> Self.Coef:
+        """
+        Gets the lmeasure of this hybrid number.
+
+        Equal to the natural log of the measure.
+
+        Parameters:
+            absolute: Setting this true will ensure a definite result.
+
+        Returns:
+            The hybrid lmeasure.
+        """
+        @parameter
+        if square == 0: return log(self.measure())
+        else: return log(self.denomer[absolute]())/2
+
+
+    # figure our how to best rectify imaginary modulus from hyperplex numbers
+
+    # @always_inline
+    # fn modulus(self) -> HybridSIMD[type,size,-1]:
+    #     """
+    #     Get the modulus of this hybrid number.
+
+    #     This is similar to the magnitude of a hybrid number, but returns a complex number to handle special cases.
+    #     """
+    #     @parameter
+    #     if square != 0: return sqrt(HybridSIMD[type,size,-1](self.denomer[False]()))
+    #     return abs(self.s)
 
     @always_inline
     fn argument[branch: Int = 0](self) -> Self.Coef:
