@@ -40,6 +40,11 @@ alias Hyperplex64     = HybridSIMD[DType.float64,1,1]
 
 fn constrain_square[type: DType, a: SIMD[type,1], b: FloatLiteral](): constrained[a == b, "mismatched 'square' parameter"]()
 
+@always_inline
+fn ufac[type: DType, size: Int, square: SIMD[type,size]]() -> SIMD[type,size]:
+    @parameter
+    if square == sign[type,size,square](): return 1
+    else: return sqrt[type, size, abs[type, size, square]()]()
 
 
 
@@ -47,7 +52,7 @@ fn constrain_square[type: DType, a: SIMD[type,1], b: FloatLiteral](): constraine
 #---
 #---
 @register_passable("trivial")
-struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
+struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, CollectionElement):
     """
     Represents a hybrid small vector backed by hardware vector elements, with scalar and antiox parts.
 
@@ -76,6 +81,9 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
 
     alias unital_square = sign[type,1,square]()
     """The normalized square."""
+
+    alias unital_factor = ufac[type,1,square]()
+    """The unitization factor."""
     
 
     #------< Data >------#
@@ -136,7 +144,7 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
         return Self{s:h.s, a:h.a}
 
 
-    #------( To )------#
+    #------( Cast )------#
     #
     @always_inline
     fn __bool__(self) -> Bool:
@@ -156,16 +164,34 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable):
     @always_inline
     fn to_unital(self) -> HybridSIMD[type, size, Self.unital_square]:
         """Unitize the HybridSIMD, this normalizes the square and adjusts the antiox coefficient."""
-        @parameter
-        if Self.unital_square == 1: return HybridSIMD[type,size,Self.unital_square](self.s, self.a * sqrt(square))
-        elif Self.unital_square == -1: return HybridSIMD[type,size,Self.unital_square](self.s, self.a * sqrt(-square))
-        else: return HybridSIMD[type,size,Self.unital_square](self.s, self.a)
+        return HybridSIMD[type,size,Self.unital_square](self.s, self.a * Self.unital_factor)
 
     @always_inline
-    fn cast[target: DType](self) -> HybridSIMD[target, size, square.cast[target]()]:
-        """Casts the elements of the HybridSIMD to the target element type."""
-        return HybridSIMD[target,size,square.cast[target]()](self.s.cast[target](), self.a.cast[target]())
+    fn cast[target_type: DType = type, target_square: SIMD[target_type,1] = square.cast[target_type]()](self) -> HybridSIMD[target_type, size, target_square]:
+        """Casts the elements of the HybridSIMD to the target type and square type."""
+        alias Target = HybridSIMD[target_type,size,target_square]
+        alias factor = Self.unital_factor.cast[target_type]() / Target.unital_factor
+        constrained[Self.unital_square.cast[target_type]() == Target.unital_square, "cannot cast to target square"]()
+        return Target(self.s.cast[target_type](), self.a.cast[target_type]() * factor)
     
+    @always_inline
+    fn try_cast[
+        target_type: DType = type,
+        target_square: SIMD[target_type,1] = square.cast[target_type](),
+        fail: HybridSIMD[target_type, 1, target_square] = nan_hybrid[target_type, target_square, HybridSIMD[target_type, 1, target_square](0)]()
+        ](self, inout result: HybridSIMD[target_type, size, target_square]) -> Bool:
+        """Casts the elements of the HybridSIMD to the target type and square type."""
+
+        alias Target = HybridSIMD[target_type,size,target_square]
+        alias factor = Self.unital_factor.cast[target_type]() / Target.unital_factor
+        
+        @parameter
+        if Self.unital_square.cast[target_type]() != Target.unital_square:
+            result = fail
+            return False
+        else:
+            result = Target(self.s.cast[target_type](), self.a.cast[target_type]() * factor)
+            return True
     
     #------( Formatting )------#
     #
