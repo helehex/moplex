@@ -4,6 +4,7 @@ Implements the moplex math module.
 Defines generalized complex math functions.
 """
 
+from collections import Optional
 from .solver import newtons_method
 
 
@@ -96,6 +97,19 @@ fn sqrt(value: IntLiteral) -> IntLiteral:
         a = b
         b = (a + value//a) // 2
     return a
+
+@always_inline
+fn sqrt[type: DType, size: Int, value: SIMD[type,size]]() -> SIMD[type,size]:
+    """Returns the square root of the input IntLiteral. This may change."""
+    if value == 0: return 0
+    elif value < 0: return nan[type]()
+    var start = value if value > 1 else 1/value
+    var a: SIMD[type,size] = start
+    var b: SIMD[type,size] = (a + 1) / 2
+    while b < a:
+        a = b
+        b = (a + start/a) / 2
+    return a if value > 1 else 1/a
 
 @always_inline
 fn sqrt(value: FloatLiteral) -> FloatLiteral:
@@ -949,7 +963,7 @@ fn min[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, s
     var b_denomer = b.denomer()
     var nans = isnan(a_denomer) or isnan(b_denomer)
     var cond = a < b
-    return select[size=size](nans, nan[type, square](), select(cond, a, b))
+    return select[size=size](nans, nan_hybrid[type, square](), select(cond, a, b))
 
 @always_inline
 fn min[square: IntLiteral](a: HybridIntLiteral[square], b: HybridIntLiteral[square]) -> HybridIntLiteral[square]:
@@ -1003,7 +1017,7 @@ fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, s
     var b_denomer = b.denomer()
     var nans = isnan(a_denomer) or isnan(b_denomer)
     var cond = a > b
-    return select[size=size](nans, nan[type,square](), select(cond, a, b))
+    return select[size=size](nans, nan_hybrid[type,square](), select(cond, a, b))
 
 
 
@@ -1026,16 +1040,23 @@ fn l1norm(value: MultiplexSIMD) -> SIMD[value.type,value.size]:
 from math import nan as _nan
 from math import isnan as _isnan
 
+# optional fail was breaking things, try again
 @always_inline
-fn nan[type: DType]() -> SIMD[type,1]:
-    return _nan[type]()
+fn nan[type: DType, fail: SIMD[type,1] = 0]() -> SIMD[type,1]:
+    @parameter
+    if type.is_integral(): return fail
+    else: return _nan[type]()
 
 @always_inline
-fn nan[type: DType, square: SIMD[type,1]]() -> HybridSIMD[type,1,square]:
-    return HybridSIMD[type,1,square](_nan[type](), _nan[type]())
+fn nan_hybrid[type: DType, square: SIMD[type,1], fail: HybridSIMD[type,1,square] = 0]() -> HybridSIMD[type,1,square]:
+    @parameter
+    if type.is_integral(): return fail
+    else: return HybridSIMD[type,1,square](_nan[type](), _nan[type]())
 
 @always_inline
-fn nan_multiplex[type: DType]() -> MultiplexSIMD[type,1]:
+fn nan_multiplex[type: DType, fail: MultiplexSIMD[type,1] = 0]() -> MultiplexSIMD[type,1]:
+    @parameter
+    if type.is_integral(): return fail
     return MultiplexSIMD[type,1](_nan[type](), _nan[type](), _nan[type](), _nan[type]())
 
 @always_inline
