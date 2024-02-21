@@ -2,17 +2,17 @@
 The greater algebra containing Hyperplex, Complex, and Paraplex numbers.
 """
 
-alias MultiplexInt8   = MultiplexSIMD[DType.int8]
-alias MultiplexUInt8  = MultiplexSIMD[DType.uint8]
-alias MultiplexInt16  = MultiplexSIMD[DType.int16]
-alias MultiplexUInt16 = MultiplexSIMD[DType.uint16]
-alias MultiplexInt32  = MultiplexSIMD[DType.int32]
-alias MultiplexUInt32 = MultiplexSIMD[DType.uint32]
-alias MultiplexInt64  = MultiplexSIMD[DType.int64]
-alias MultiplexUInt64 = MultiplexSIMD[DType.uint64]
-alias Multiplex16     = MultiplexSIMD[DType.float16]
-alias Multiplex32     = MultiplexSIMD[DType.float32]
-alias Multiplex64     = MultiplexSIMD[DType.float64]
+alias MultiplexInt8   = MultiplexSIMD[DType.int8,1]
+alias MultiplexUInt8  = MultiplexSIMD[DType.uint8,1]
+alias MultiplexInt16  = MultiplexSIMD[DType.int16,1]
+alias MultiplexUInt16 = MultiplexSIMD[DType.uint16,1]
+alias MultiplexInt32  = MultiplexSIMD[DType.int32,1]
+alias MultiplexUInt32 = MultiplexSIMD[DType.uint32,1]
+alias MultiplexInt64  = MultiplexSIMD[DType.int64,1]
+alias MultiplexUInt64 = MultiplexSIMD[DType.uint64,1]
+alias Multiplex16     = MultiplexSIMD[DType.float16,1]
+alias Multiplex32     = MultiplexSIMD[DType.float32,1]
+alias Multiplex64     = MultiplexSIMD[DType.float64,1]
 
 
 

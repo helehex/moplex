@@ -359,5 +359,6 @@ fn test_math():
     var multiplex = Multiplex64(10,2,3,4) / Multiplex64(-4,3,2,1)
     print(multiplex)
     print("10 + 2i + 3o + 4x =  ", (multiplex*Multiplex64(-4,3,2,1)))
+    
 
 alias SuperHyperplex64 = HybridSIMD[DType.float64,1,2] # next gen game system
