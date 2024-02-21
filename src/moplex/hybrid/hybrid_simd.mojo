@@ -273,6 +273,17 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
         self.s[idx] = item.s
         self.a[idx] = item.a
 
+    @always_inline
+    fn get_antiox[square: SIMD[type,1]](self) -> SIMD[type,size]:
+        @parameter
+        if sign[type,1,Self.square]() != sign[type,1,square](): return 0
+        else: return self.a * (Self.unital_factor / ufac[type,1,square]())
+
+    @always_inline
+    fn set_antiox[square: SIMD[type,1]](inout self, antiox: SIMD[type,size]):
+        constrained[sign[type,1,Self.square]() == sign[type,1,square](), "cannot set antiox. square not contained in this hybrid algebra"]()
+        self.a = antiox * (ufac[type,1,square]() / Self.unital_factor)
+
 
     #------( Min / Max )------#
     #
