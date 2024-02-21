@@ -1,0 +1,10 @@
+- better branch selection for lambert w
+- hybrid hyperbolic trig functions
+- fill out multiplex types
+- finish removing old work from infrared
+    - fill out some of the missing simd operations
+- think about renaming `hybrid.s` to `hybrid.real`, and `hybrid.a` to `hybrid.anti`
+- think about renaming `hybrid.get_hybrid()` to `hybrid.get_lane()`
+- think about either:
+    - use individual real and antiox types to distiguish things like `sqrt(Real(-1)) = i` vs. `sqrt(-1) = nan`,
+    - keep going with distinguishing function names like hsqrt(-1), hexp(), etc..
