@@ -18,23 +18,44 @@ from moplex.random import *
 from moplex.math import *
 
 fn temp():
-
-    # find better way to handle imaginary measure on hyperplex numbers. pow behaves badly
-
     print("temp\n")
 
-    print(sqrt[DType.float64,1,SIMD[DType.float64,1](0.25)]())
-    print()
-    var a = HybridSIMD[DType.float64,1,-2](2,3)
-    print(a.to_unital()*a.to_unital())
-    print((a*a).to_unital())
-    print()
-    print(a*a)
-    print((a.cast[DType.float16,-3]()*a.cast[DType.float16,-3]()).cast[DType.float64,-2]())
-    print()
-    var casted: HybridSIMD[DType.float32,1,1] = 0
-    print(a.try_cast[DType.float32,1](casted), casted)
+    #--- test ctime simd sqrt
 
+    # only works for simd size = 1 when aliased
+    # lucky i only need it for that
+
+    # var s = sqrt(SIMD[DType.float64,8](-1,0,0.5,4,5,6,7,8))
+    # var s = sqrt[DType.int64, 8, SIMD[DType.int64,8](-1,0,1,4,9,16,18,25)]()
+    alias s = sqrt[DType.float64, 1, SIMD[DType.float64,1](2)]()
+    print(s)
+    print(s*s)
+
+
+    #--- test casting between antiox
+    # print()
+    # var a = HybridSIMD[DType.float64,2,-2](2,3)
+    # print(a.to_unital()*a.to_unital())
+    # print((a*a).to_unital())
+    # print()
+    # print(a*a)
+    # print((a.cast[DType.float16,-3]()*a.cast[DType.float16,-3]()).cast[DType.float64,-2]())
+    # print()
+    # var casted: HybridSIMD[DType.float32,2,1] = 0
+    # print(a.try_cast[DType.float32,1](casted), casted)
+    # print()
+
+
+    # #--- test get and set antiox
+    # var m = HybridSIMD[DType.float64,1,-0.5](10,6)
+    # m.set_antiox[-2](6)
+    # print(m.get_antiox[-2]())
+    # var n = HybridSIMD[DType.float64,1,-2](10,6)
+    # print(m)
+    # print(n.cast[target_square = -0.5]())
+
+
+    #--- find better way to handle imaginary measure on hyperplex numbers. pow behaves badly
 
     # print(pow[branch=4](HybridSIMD[DType.float64,1,-1](1), 1/4))
     

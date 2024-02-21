@@ -100,16 +100,18 @@ fn sqrt(value: IntLiteral) -> IntLiteral:
 
 @always_inline
 fn sqrt[type: DType, size: Int, value: SIMD[type,size]]() -> SIMD[type,size]:
-    """Returns the square root of the input IntLiteral. This may change."""
-    if value == 0: return 0
-    elif value < 0: return nan[type]()
-    var start = value if value > 1 else 1/value
-    var a: SIMD[type,size] = start
-    var b: SIMD[type,size] = (a + 1) / 2
-    while b < a:
-        a = b
-        b = (a + start/a) / 2
-    return a if value > 1 else 1/a
+    """Returns the square root of the input simd vector."""
+    @parameter
+    if type.is_floating_point(): return select(value == 0, 0, 1/rsqrt[type,size,value]())
+
+    var negative = (value <= 0)
+    var finished = (negative) | (value == 1)
+    var a = select(negative, -1, (value + 1)/2)
+    while not finished:
+        var b = (a + value/a) / 2
+        finished |= b >= a
+        a = select(finished, a, b)
+    return select(negative, 0, a)
 
 @always_inline
 fn sqrt(value: FloatLiteral) -> FloatLiteral:
@@ -152,6 +154,21 @@ fn sqrt[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,siz
 #------( Inverse Square Root )------#
 #
 from math import rsqrt as _rsqrt
+
+@always_inline
+fn rsqrt[type: DType, size: Int, value: SIMD[type,size]]() -> SIMD[type,size]:
+    """Returns the reciprocal square root of the input simd vector."""
+    @parameter
+    if type.is_integral(): return 0
+
+    var negative = value <= 0
+    var finished = negative | (value == 1)
+    var a = select[type,size](negative, nan[type](), 2/(value + 1))
+    while not finished:
+        var b = (a/2) * (3 - value*a*a)
+        finished |= b <= a
+        a = select(finished, a, b)
+    return a
 
 @always_inline
 fn rsqrt(value: FloatLiteral) -> FloatLiteral:
@@ -424,6 +441,23 @@ fn _dxex[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,si
 
 @always_inline
 fn lw[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """
+    Computes the elementwise Lambert W function of a HybridSIMD vector.
+
+    The Lamber W function is defined as: `lw(x*(e**x)) = x` for a variable x.
+
+    Parameters:
+        type: The dtype of the HybridSIMD vectors.
+        size: The width of the input and output SIMD vectors.
+        square: The antiox squared of the input hybrid numbers.
+        branch: The multivalue branch to propagate.
+
+    Args:
+        value: HybridSIMD vector to perform lambert w on.
+
+    Returns:
+        HybridSIMD Vector containing the results.
+    """
     var guess: HybridSIMD[type,size,square]
 
     @parameter # work out more branch selection
@@ -440,24 +474,23 @@ from math import sin as _sin
 
 @always_inline
 fn sin(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes sine of the input."""
+    """Computes sine of the input."""
     return sin[DType.float64,1](value).value
 
 @always_inline
 fn sin(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes sine of the input."""
+    """Computes sine of the input."""
     return _sin(value)
 
 @always_inline
 fn sin[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """Computes sine of the input."""
     @parameter
     if square == -1: return HybridSIMD[type,size,square](sin(value.s) * cosh(value.a), cos(value.s) * sinh(value.a))
     elif square == 0: return HybridSIMD[type,size,square](sin(value.s), cos(value.s) * value.a)
     elif square == 1: return HybridSIMD[type,size,square](sin(value.s) * cos(value.a), cos(value.s) * sin(value.a))
 
-    var conversion = sqrt(abs[type,1,square]())
-    var result = sin(HybridSIMD[type, size, value.unital_square](value.s, value.a*conversion))
-    return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    return sin(value.to_unital()).cast[target_square=square]()
 
 
 
@@ -468,24 +501,23 @@ from math import cos as _cos
 
 @always_inline
 fn cos(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes cosine of the input."""
+    """Computes cosine of the input."""
     return cos[DType.float64,1](value).value
 
 @always_inline
 fn cos(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes cosine of the input."""
+    """Computes cosine of the input."""
     return _cos(value)
 
 @always_inline
 fn cos[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+    """Computes cosine of the input."""
     @parameter
     if square == -1: return HybridSIMD[type,size,square](cos(value.s) * cosh(value.a), -sin(value.s) * sinh(value.a))
     elif square == 0: return HybridSIMD[type,size,square](cos(value.s), -sin(value.s) * value.a)
     elif square == 1: return HybridSIMD[type,size,square](cos(value.s) * cos(value.a), -sin(value.s) * sin(value.a))
 
-    var conversion = sqrt(abs[type,1,square]())
-    var result = cos(HybridSIMD[type, size, value.unital_square](value.s, value.a*conversion))
-    return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    return cos(value.to_unital()).cast[target_square=square]()
 
 
 
@@ -496,26 +528,24 @@ from math import tan as _tan
 
 @always_inline
 fn tan(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes tangent of the input."""
+    """Computes tangent of the input."""
     return tan[DType.float64,1](value).value
 
 @always_inline
 fn tan(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes tangent of the input."""
+    """Computes tangent of the input."""
     return _tan(value)
 
 @always_inline
 fn tan[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes tangent of the input."""
-    # check for optimizations
+    # check if 2* is optimized
     @parameter
     if square == -1: return HybridSIMD[type,size,square](sin(2*value.s), sinh(2*value.a)) / (cos(2*value.s) + cosh(2*value.a))
     elif square == 0: return HybridSIMD[type,size,square](tan(value.s), (sec(value.s)**2) * value.a)
     elif square == 1: return HybridSIMD[type,size,square](sin(2*value.s), sin(2*value.a)) / (cos(2*value.s) + cos(2*value.a))
 
-    var conversion = sqrt(abs[type,1,square]())
-    var result = tan(HybridSIMD[type, size, value.unital_square](value.s, value.a*conversion))
-    return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    return tan(value.to_unital()).cast[target_square=square]()
 
 
 
@@ -535,15 +565,13 @@ fn cot(value: SIMD) -> SIMD[value.type, value.size]:
 @always_inline
 fn cot[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes cotangent of the input."""
-    # check for optimizations
+    # check if 1/tan is optimized
     @parameter
     if square == -1: return (cos(2*value.s) + cosh(2*value.a)) / HybridSIMD[type,size,square](sin(2*value.s), sinh(2*value.a))
     elif square == 0: return HybridSIMD[type,size,square](cot(value.s), -(csc(value.s)**2) * value.a)
     elif square == 1: return (cos(2*value.s) + cos(2*value.a)) / HybridSIMD[type,size,square](sin(2*value.s), sin(2*value.a))
 
-    var conversion = sqrt(abs[type,1,square]())
-    var result = cot(HybridSIMD[type, size, value.unital_square](value.s, value.a*conversion))
-    return HybridSIMD[type, size, square](result.s, result.a/conversion)
+    return cot(value.to_unital()).cast[target_square=square]()
 
 
 
@@ -594,12 +622,12 @@ from math import sinh as _sinh
 
 @always_inline
 fn sinh(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes hyperbolic sine of the input."""
+    """Computes hyperbolic sine of the input."""
     return sinh[DType.float64,1](value).value
 
 @always_inline
 fn sinh(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes hyperbolic sine of the input."""
+    """Computes hyperbolic sine of the input."""
     return _sinh(value)
 
 
@@ -611,12 +639,12 @@ from math import cosh as _cosh
 
 @always_inline
 fn cosh(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes hyperbolic cosine of the input."""
+    """Computes hyperbolic cosine of the input."""
     return cosh[DType.float64,1](value).value
 
 @always_inline
 fn cosh(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes hyperbolic cosine of the input."""
+    """Computes hyperbolic cosine of the input."""
     return _cosh(value)
 
 
@@ -628,12 +656,12 @@ from math import tanh as _tanh
 
 @always_inline
 fn tanh(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes hyperbolic tangent of the input."""
+    """Computes hyperbolic tangent of the input."""
     return tanh[DType.float64,1](value).value
 
 @always_inline
 fn tanh(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes hyperbolic tangent of the input."""
+    """Computes hyperbolic tangent of the input."""
     return _tanh(value)
 
 
@@ -690,12 +718,12 @@ from math import asin as _asin
 
 @always_inline
 fn asin(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes the arcsine of the input."""
+    """Computes the arcsine of the input."""
     return _asin[DType.float64,1](value).value
 
 @always_inline
 fn asin(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes the arcsine of the input."""
+    """Computes the arcsine of the input."""
     return _asin(value)
 
 
@@ -707,12 +735,12 @@ from math import acos as _acos
 
 @always_inline
 fn acos(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes the arccosine of the input."""
+    """Computes the arccosine of the input."""
     return _acos[DType.float64,1](value).value
 
 @always_inline
 fn acos(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes the arccosine of the input."""
+    """Computes the arccosine of the input."""
     return _acos(value)
 
 
@@ -725,22 +753,22 @@ from math import atan2 as _atan2
 
 @always_inline
 fn atan(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes arctangent of the input."""
+    """Computes arctangent of the input."""
     return atan[DType.float64,1](value).value
 
 @always_inline
 fn atan(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes arctangent of the input."""
+    """Computes arctangent of the input."""
     return _atan(value)
 
 @always_inline
 fn atan2(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes quadrant adjusted arctangent of the inputs."""
+    """Computes quadrant adjusted arctangent of the inputs."""
     return atan2[DType.float64,1](a, b).value
 
 @always_inline
 fn atan2(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
-    """Mocks stdlib. Computes quadrant adjusted arctangent of the inputs."""
+    """Computes quadrant adjusted arctangent of the inputs."""
     return _atan2(a,b)
 
 
@@ -752,12 +780,12 @@ from math import asinh as _asinh
 
 @always_inline
 fn asinh(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes the hyperbolic arcsine of the input."""
+    """Computes the hyperbolic arcsine of the input."""
     return _asinh[DType.float64,1](value).value
 
 @always_inline
 fn asinh(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes the hyperbolic arcsine of the input."""
+    """Computes the hyperbolic arcsine of the input."""
     return _asinh(value)
 
 
@@ -769,12 +797,12 @@ from math import acosh as _acosh
 
 @always_inline
 fn acosh(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes the hyperbolic arccosine of the input."""
+    """Computes the hyperbolic arccosine of the input."""
     return _acosh[DType.float64,1](value).value
 
 @always_inline
 fn acosh(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes the hyperbolic arccosine of the input."""
+    """Computes the hyperbolic arccosine of the input."""
     return _acosh(value)
 
 
@@ -786,12 +814,12 @@ from math import atanh as _atanh
 
 @always_inline
 fn atanh(value: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib. Computes hyperbolic arctangent of the input."""
+    """Computes hyperbolic arctangent of the input."""
     return _atanh[DType.float64,1](value).value
 
 @always_inline
 fn atanh(value: SIMD) -> SIMD[value.type, value.size]:
-    """Mocks stdlib. Computes hyperbolic arctangent of the input."""
+    """Computes hyperbolic arctangent of the input."""
     return _atanh(value)
 
 
