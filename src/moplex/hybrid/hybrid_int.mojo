@@ -17,7 +17,7 @@ alias HyperplexInt = HybridInt[1]
 #--- not really necessary, but thats ok, it does allow for Int/Int to give a SIMD[DType.float64,1], thats the only thing i can really see
 #---
 @register_passable("trivial")
-struct HybridInt[square: Int](Stringable):
+struct HybridInt[square: Int](Stringable, CollectionElement):
     """
     Represent a hybrid integer type with scalar and antiox parts.
 
@@ -66,7 +66,12 @@ struct HybridInt[square: Int](Stringable):
     @always_inline
     fn __bool__(self) -> Bool:
         """Returns true when there are any non-zero parts."""
-        return self.s == 0 and self.a == 0
+        return self.s.__bool__() or self.__bool__()
+
+    @always_inline
+    fn nil(self) -> Bool:
+        """Returns true when this hybrid number has a non zero measure."""
+        return self.contrast() != 0
 
     @always_inline
     fn to_tuple(self) -> StaticTuple[2, Self.Coef]:
@@ -92,7 +97,7 @@ struct HybridInt[square: Int](Stringable):
     @always_inline
     fn __str__(self) -> String:
         """Formats the hybrid as a String."""
-        return String(self.s) + " + " + String(self.a) + symbol[square]()
+        return str(self.s) + " + " + str(self.a) + symbol[square]()
 
 
     #------( Get / Set )------#
@@ -136,9 +141,7 @@ struct HybridInt[square: Int](Stringable):
     @always_inline
     fn __lt__(self, other: Self) -> Bool:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
-        @parameter
-        if square == 0: return self.measure() < other.measure()
-        else: return self.denomer() < other.denomer()
+        return self.contrast() < other.contrast()
 
     @always_inline
     fn __lt__(self, other: Self.Coef) -> Bool:
@@ -150,9 +153,7 @@ struct HybridInt[square: Int](Stringable):
     @always_inline
     fn __le__(self, other: Self) -> Bool:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() <= other.measure()
-        else: return self.denomer() <= other.denomer()
+        return self.contrast() <= other.contrast()
 
     @always_inline
     fn __le__(self, other: Self.Coef) -> Bool:
@@ -184,9 +185,7 @@ struct HybridInt[square: Int](Stringable):
     @always_inline
     fn __gt__(self, other: Self) -> Bool:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
-        @parameter
-        if square == 0: return self.measure() > other.measure()
-        else: return self.denomer() > other.denomer()
+        return self.contrast() > other.contrast()
 
     @always_inline
     fn __gt__(self, other: Self.Coef) -> Bool:
@@ -198,9 +197,7 @@ struct HybridInt[square: Int](Stringable):
     @always_inline
     fn __ge__(self, other: Self) -> Bool:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() >= other.measure()
-        else: return self.denomer() >= other.denomer()
+        return self.contrast() >= other.contrast()
 
     @always_inline
     fn __ge__(self, other: Self.Coef) -> Bool:
@@ -264,7 +261,14 @@ struct HybridInt[square: Int](Stringable):
         return self.inner(self)
 
     @always_inline
-    fn measure[absolute: Bool = False](self) -> SIMD[DType.float64,1]:
+    fn contrast(self) -> Self.Coef:
+        """Uses the fastest way to compare two hybrid numbers."""
+        @parameter
+        if square == 0: return abs(self.s)
+        else: return self.denomer()
+
+    @always_inline
+    fn measure[absolute: Bool = False](self) -> Float64:
         """
         Gets the measure of this hybrid number.
         
@@ -284,7 +288,7 @@ struct HybridInt[square: Int](Stringable):
             The hybrid measure.
         """
         @parameter
-        if square != 0: return sqrt[DType.float64,1](self.denomer[absolute]())
+        if square != 0: return sqrt(Float64(self.denomer[absolute]()))
         return abs(self.s)
 
     @always_inline

@@ -13,6 +13,7 @@ alias ComplexUInt64 = HybridSIMD[DType.uint64,1,-1]
 alias Complex16     = HybridSIMD[DType.float16,1,-1]
 alias Complex32     = HybridSIMD[DType.float32,1,-1]
 alias Complex64     = HybridSIMD[DType.float64,1,-1]
+# alias Complex       = HybridSIMD[_, 1, -1]
 
 alias ParaplexInt8   = HybridSIMD[DType.int8,1,0]
 alias ParaplexUInt8  = HybridSIMD[DType.uint8,1,0]
@@ -52,7 +53,7 @@ fn ufac[type: DType, size: Int, square: SIMD[type,size]]() -> SIMD[type,size]:
 #---
 #---
 @register_passable("trivial")
-struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, CollectionElement):
+struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, CollectionElement):
     """
     Represents a hybrid small vector backed by hardware vector elements, with scalar and antiox parts.
 
@@ -84,6 +85,8 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
 
     alias unital_factor = ufac[type,1,square]()
     """The unitization factor."""
+
+    alias Type = HybridSIMD[type,size,square]
     
 
     #------< Data >------#
@@ -106,6 +109,16 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
     fn __init__[__:None=None](s: SIMD[type,1] = 0, a: SIMD[type,1] = 0) -> Self:
         """Initializes a HybridSIMD from coefficients."""
         return Self{s:s, a:a}
+
+    @always_inline # Coefficients
+    fn __init__(t: Tuple[Int, Int]) -> Self:
+        """Initializes a HybridSIMD from coefficients."""
+        return Self{s:t.get[0, Int](), a:t.get[1, Int]()}
+
+    @always_inline # Coefficients
+    fn __init__(t: Tuple[Scalar[type], Scalar[type]]) -> Self:
+        """Initializes a HybridSIMD from coefficients."""
+        return Self{s:t.get[0, Scalar[type]](), a:t.get[1, Scalar[type]]()}
 
     @always_inline # Scalar
     fn __init__(s: FloatLiteral) -> Self:
@@ -149,7 +162,12 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
     @always_inline
     fn __bool__(self) -> Bool:
         """Returns true when there are any non-zero parts."""
-        return self.s == 0 and self.a == 0
+        return self.s.__bool__() or self.a.__bool__()
+
+    @always_inline
+    fn nil(self) -> Bool:
+        """Returns true when this hybrid number has a non zero measure."""
+        return self.contrast() != 0
 
     @always_inline
     fn to_int(self) -> HybridInt[square.to_int()]:
@@ -178,7 +196,7 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
     fn try_cast[
         target_type: DType = type,
         target_square: SIMD[target_type,1] = square.cast[target_type](),
-        fail: HybridSIMD[target_type, 1, target_square] = nan_hybrid[target_type, target_square, HybridSIMD[target_type, 1, target_square](0)]()
+        fail: HybridSIMD[target_type, 1, target_square] = nan_hybrid[target_type, target_square, 1, HybridSIMD[target_type, 1, target_square](0)]()
         ](self, inout result: HybridSIMD[target_type, size, target_square]) -> Bool:
         """Casts the elements of the HybridSIMD to the target type and square type."""
 
@@ -296,11 +314,9 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
     @always_inline
     fn reduce_min(self) -> HybridSIMD[type,1,square]:
         """Returns the hybrid element with the smallest measure across the SIMD axis. Remind me to improve implementation."""
-        var result: HybridSIMD[type,1,square] = self.get_hybrid(0)
-        @unroll
-        for i in range(1, size):
-            result = min(result, self.get_hybrid(i))
-        return result
+        @parameter
+        fn _min[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]: return min(a,b)
+        return self.reduce[_min]()
 
     @always_inline
     fn reduce_min_coef(self) -> SIMD[type,1]:
@@ -321,11 +337,9 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
     @always_inline
     fn reduce_max(self) -> HybridSIMD[type,1,square]:
         """Returns the hybrid element with the largest measure across the SIMD axis. Remind me to improve implementation."""
-        var result: HybridSIMD[type,1,square] = self.get_hybrid(0)
-        @unroll
-        for i in range(1, size):
-            result = max(result, self.get_hybrid(i))
-        return result
+        @parameter
+        fn _max[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]: return max(a,b)
+        return self.reduce[_max]()
 
     @always_inline
     fn reduce_max_coef(self) -> SIMD[type,1]:
@@ -345,80 +359,145 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
         """Returns the length of the SIMD axis. Guaranteed to be a power of 2."""
         return size
 
+    # fma
+
+    @always_inline
+    fn shuffle[*mask: Int](self) -> Self:
+        alias l = len(VariadicList(mask))
+        var result = HybridSIMD[type,size,square]()
+        @unroll
+        for i in range(l): result[i] = self[mask[i]]
+        return result
+
+    @always_inline
+    fn shuffle[*mask: Int](self, other: Self) -> Self:
+        alias l = len(VariadicList(mask))
+        var result = HybridSIMD[type,size,square]()
+        @unroll
+        for i in range(l): result[i] = (self + other)[mask[i]]
+        return result
+
+    @always_inline
+    fn slice[slice_size: Int](self, offset: Int) -> HybridSIMD[type,slice_size,square]:
+        return HybridSIMD[type,slice_size,square](self.s.slice[slice_size](offset), self.a.slice[slice_size](offset))
+
+    @always_inline
+    fn join(self, other: Self) -> HybridSIMD[type,2*size,square]:
+        return HybridSIMD[type,2*size,square](self.s.join(other.s), self.a.join(other.a))
+
+    @always_inline
+    fn interleave(self, other: Self) -> HybridSIMD[type,2*size,square]:
+        return HybridSIMD[type,2*size,square](self.s.interleave(other.s), self.a.interleave(other.a))
+
+    @always_inline
+    fn deinterleave(self) -> StaticTuple[2, HybridSIMD[type,size//2,square]]:
+        var s = self.s.deinterleave()
+        var a = self.a.deinterleave()
+        return StaticTuple[2](HybridSIMD[type,size//2,square](s[0],a[0]), HybridSIMD[type,size//2,square](s[1],a[1]))
+
+    @always_inline
+    fn reduce[func: fn[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) capturing -> HybridSIMD[type,size,square], size_out: Int = 1](self) -> HybridSIMD[type,size_out,square]:
+        @parameter
+        if size_out >= size:
+            return self.slice[size_out](0)
+        else:
+            var reduced = self.reduce[func, 2*size_out]()
+            return func(reduced.slice[size_out](0), reduced.slice[size_out](size_out))
+
+    @always_inline
+    fn reduce_add(self) -> HybridSIMD[type,1,square]:
+        @parameter
+        fn _add[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]: return a + b
+        return self.reduce[_add]()
+
+    @always_inline
+    fn reduce_mul(self) -> HybridSIMD[type,1,square]:
+        @parameter
+        fn _mul[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]: return a * b
+        return self.reduce[_mul]()
+
+    @always_inline
+    fn rotate_left[shift: Int](self) -> Self:
+        return Self(self.s.rotate_left[shift](), self.a.rotate_left[shift]())
+    
+    @always_inline
+    fn rotate_right[shift: Int](self) -> Self:
+        return Self(self.s.rotate_right[shift](), self.a.rotate_right[shift]())
+    
+    @always_inline
+    fn shift_left[shift: Int](self) -> Self:
+        return Self(self.s.shift_left[shift](), self.a.shift_left[shift]())
+    
+    @always_inline
+    fn shift_right[shift: Int](self) -> Self:
+        return Self(self.s.shift_right[shift](), self.a.shift_right[shift]())
+
 
     #------( Comparison )------#
     #
     @always_inline
-    fn __lt__(self, other: Self) -> Bool:
+    fn __lt__(self, other: Self) -> SIMD[DType.bool,size]:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
-        @parameter
-        if square == 0: return self.measure() < other.measure()
-        else: return self.denomer() < other.denomer()
+        return self.contrast() < other.contrast()
 
     @always_inline
-    fn __lt__(self, other: Self.Coef) -> Bool:
+    fn __lt__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
         @parameter
         if square == 0: return self.measure() < abs(other)
         else: return self.denomer() < other*other
 
     @always_inline
-    fn __le__(self, other: Self) -> Bool:
+    fn __le__(self, other: Self) -> SIMD[DType.bool,size]:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() <= other.measure()
-        else: return self.denomer() <= other.denomer()
+        return self.contrast() <= other.contrast()
 
     @always_inline
-    fn __le__(self, other: Self.Coef) -> Bool:
+    fn __le__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
         @parameter
         if square == 0: return self.measure() <= abs(other)
         else: return self.denomer() <= other*other
 
     @always_inline
-    fn __eq__(self, other: Self) -> Bool:
+    fn __eq__(self, other: Self) -> SIMD[DType.bool,size]:
         """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.s == other.s and self.a == other.a
 
     @always_inline
-    fn __eq__(self, other: Self.Coef) -> Bool:
+    fn __eq__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.s == other and self.a == 0
     
     @always_inline
-    fn __ne__(self, other: Self) -> Bool:
+    fn __ne__(self, other: Self) -> SIMD[DType.bool,size]:
         """Defines the `!=` inequality operator. Returns true if the hybrid numbers are not equal."""
         return self.s != other.s or self.a != other.a
 
     @always_inline
-    fn __ne__(self, other: Self.Coef) -> Bool:
+    fn __ne__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `!=` inequality operator. Returns true if the hybrid numbers are not equal."""
         return self.s != other or self.a != 0
 
     @always_inline
-    fn __gt__(self, other: Self) -> Bool:
+    fn __gt__(self, other: Self) -> SIMD[DType.bool,size]:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
-        @parameter
-        if square == 0: return self.measure() > other.measure()
-        else: return self.denomer() > other.denomer()
+        return self.contrast() > other.contrast()
 
     @always_inline
-    fn __gt__(self, other: Self.Coef) -> Bool:
+    fn __gt__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
         @parameter
         if square == 0: return self.measure() > abs(other)
         else: return self.denomer() > other*other
 
     @always_inline
-    fn __ge__(self, other: Self) -> Bool:
+    fn __ge__(self, other: Self) -> SIMD[DType.bool,size]:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() >= other.measure()
-        else: return self.denomer() >= other.denomer()
+        return self.contrast() >= other.contrast()
 
     @always_inline
-    fn __ge__(self, other: Self.Coef) -> Bool:
+    fn __ge__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
         @parameter
         if square == 0: return self.measure() >= abs(other)
@@ -479,6 +558,13 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
         else: return self.inner(self)
 
     @always_inline
+    fn contrast(self) -> Self.Coef:
+        """Uses the fastest way to compare two hybrid numbers."""
+        @parameter
+        if square == 0: return self.measure()
+        else: return self.denomer()
+
+    @always_inline
     fn measure[absolute: Bool = False](self) -> Self.Coef:
         """
         Gets the measure of this hybrid number.
@@ -496,7 +582,6 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
         @parameter
         if square == 0: return abs(self.s)
         else: return sqrt(self.denomer[absolute]())
-        
 
     @always_inline
     fn lmeasure[absolute: Bool = False](self) -> Self.Coef:
@@ -515,9 +600,7 @@ struct HybridSIMD[type: DType, size: Int, square: SIMD[type,1]](Stringable, Coll
         if square == 0: return log(self.measure())
         else: return log(self.denomer[absolute]())/2
 
-
-    # figure our how to best rectify imaginary modulus from hyperplex numbers
-
+    # # figure our how to best rectify imaginary modulus from hyperplex numbers
     # @always_inline
     # fn modulus(self) -> HybridSIMD[type,size,-1]:
     #     """

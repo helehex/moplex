@@ -85,7 +85,12 @@ struct HybridFloatLiteral[square: FloatLiteral](Stringable):
     @always_inline
     fn __bool__(self) -> Bool:
         """Returns true when there are any non-zero parts."""
-        return self.s == 0 and self.a == 0
+        return self.s.__bool__() or self.a.__bool__()
+
+    @always_inline
+    fn nil(self) -> Bool:
+        """Returns true when this hybrid number has a non zero measure."""
+        return self.contrast() != 0
 
     @always_inline
     fn to_int(self) -> HybridInt[square.to_int()]:
@@ -160,9 +165,7 @@ struct HybridFloatLiteral[square: FloatLiteral](Stringable):
     @always_inline
     fn __lt__(self, other: Self) -> Bool:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
-        @parameter
-        if square == 0: return self.measure() < other.measure()
-        else: return self.denomer() < other.denomer()
+        return self.contrast() < other.contrast()
 
     @always_inline
     fn __lt__(self, other: Self.Coef) -> Bool:
@@ -174,9 +177,7 @@ struct HybridFloatLiteral[square: FloatLiteral](Stringable):
     @always_inline
     fn __le__(self, other: Self) -> Bool:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() <= other.measure()
-        else: return self.denomer() <= other.denomer()
+        return self.contrast() <= other.contrast()
 
     @always_inline
     fn __le__(self, other: Self.Coef) -> Bool:
@@ -208,9 +209,7 @@ struct HybridFloatLiteral[square: FloatLiteral](Stringable):
     @always_inline
     fn __gt__(self, other: Self) -> Bool:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
-        @parameter
-        if square == 0: return self.measure() > other.measure()
-        else: return self.denomer() > other.denomer()
+        return self.contrast() > other.contrast()
 
     @always_inline
     fn __gt__(self, other: Self.Coef) -> Bool:
@@ -222,9 +221,7 @@ struct HybridFloatLiteral[square: FloatLiteral](Stringable):
     @always_inline
     fn __ge__(self, other: Self) -> Bool:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() >= other.measure()
-        else: return self.denomer() >= other.denomer()
+        return self.contrast() >= other.contrast()
 
     @always_inline
     fn __ge__(self, other: Self.Coef) -> Bool:
@@ -274,6 +271,13 @@ struct HybridFloatLiteral[square: FloatLiteral](Stringable):
         @parameter
         if absolute: return abs(self.inner(self))
         return self.inner(self)
+
+    @always_inline
+    fn contrast(self) -> Self.Coef:
+        """Uses the fastest way to compare two hybrid numbers."""
+        @parameter
+        if square == 0: return self.measure()
+        else: return self.denomer()
 
     @always_inline
     fn measure[absolute: Bool = False](self) -> Self.Coef:

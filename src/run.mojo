@@ -1,5 +1,5 @@
 from sys import argv
-from moplex.hybrid.test import test_math
+from test import test_math
 from example import example_code
 from bench import bench_hybrid, bench_multiplex
 
@@ -17,6 +17,7 @@ from moplex.hybrid import *
 from moplex.random import *
 from moplex.math import *
 
+
 fn temp():
     print("temp\n")
 
@@ -27,9 +28,45 @@ fn temp():
 
     # var s = sqrt(SIMD[DType.float64,8](-1,0,0.5,4,5,6,7,8))
     # var s = sqrt[DType.int64, 8, SIMD[DType.int64,8](-1,0,1,4,9,16,18,25)]()
-    alias s = sqrt[DType.float64, 1, SIMD[DType.float64,1](2)]()
-    print(s)
-    print(s*s)
+    # alias s = sqrt[DType.float64, 1, SIMD[DType.float64,1](2)]()
+    # print(s)
+    # print(s*s)
+
+    var a = HybridSIMD[DType.float64,8,-1]((1,1), (2,2), (1,10), (1,-8), (-2,-3), (4,5), (6,7), (8,9))
+    print(a)
+    print()
+    print(a.reduce_add())
+    print(a.reduce_mul())
+    print(a.reduce_min())
+    print(a.reduce_max())
+    print()
+    print(max(HybridSIMD[DType.float64,1,-1](1,2), nan_hybrid[DType.float64, -1]()))
+    print(max(nan_hybrid[DType.float64, -1](), HybridSIMD[DType.float64,1,-1](1,2)))
+    print()
+
+
+    #--- test lambert w
+    print(lw(HybridSIMD[DType.float64,1,-1](1)))
+    print()
+
+
+    #--- nil
+    print(HybridSIMD[DType.float64,1,1](0,0).nil())
+    print(HybridSIMD[DType.float64,1,1](1,0).nil())
+    print(HybridSIMD[DType.float64,1,1](0,1).nil())
+    print(HybridSIMD[DType.float64,1,1](-1,-1).nil())
+
+
+    #--- math.limit
+    # print(sqrt(1.2))
+    # print(nan_hybrid[DType.float64,-1,4]())
+    # alias b = isnan(Nan)
+    # print(b)
+
+    # #this fails
+    # @parameter
+    # if isnan(Float64(Nan)):
+    #     print("G")
 
 
     #--- test casting between antiox
