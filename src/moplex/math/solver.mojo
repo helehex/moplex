@@ -1,13 +1,11 @@
-alias NAN: FloatLiteral = __mlir_attr.`0x7ff8000000000000:f64`
-
 #------ Newtons Method ------#
 #
 fn newtons_method[type: DType, size: Int,
     f: fn(SIMD[type,size])->SIMD[type,size],
     df: fn(SIMD[type,size])->SIMD[type,size],
     iterations: Int = 8,
-    tolerance: FloatLiteral = NAN,
-    epsilon: FloatLiteral = NAN
+    tolerance: FloatLiteral = Nan,
+    epsilon: FloatLiteral = Nan
     ](x0: SIMD[type,size], y_offset: SIMD[type,size] = 0) -> SIMD[type,size]:
     
     """
@@ -45,7 +43,7 @@ fn newtons_method[type: DType, size: Int,
         var yp = df(x1)
 
         @parameter
-        if not isnan(tolerance):
+        if not isnan(epsilon):
             var exploded = abs(yp) <= epsilon
             completed |= exploded
             x1 = select(exploded, _nan, x1)
@@ -70,8 +68,8 @@ fn newtons_method[type: DType, size: Int, square: SIMD[type,1],
     f: fn(HybridSIMD[type,size,square])->HybridSIMD[type,size,square],
     df: fn(HybridSIMD[type,size,square])->HybridSIMD[type,size,square],
     iterations: Int = 8,
-    tolerance: FloatLiteral = NAN,
-    epsilon: FloatLiteral = NAN
+    tolerance: FloatLiteral = Nan,
+    epsilon: FloatLiteral = Nan
     ](x0: HybridSIMD[type,size,square], y_offset: HybridSIMD[type,size,square] = 0) -> HybridSIMD[type,size,square]:
     
     """
@@ -110,7 +108,7 @@ fn newtons_method[type: DType, size: Int, square: SIMD[type,1],
         var yp = df(x1)
 
         @parameter
-        if not isnan(tolerance):
+        if not isnan(epsilon):
             var exploded = l1norm(yp) <= epsilon
             completed |= exploded
             x1 = select(exploded, _nan, x1)
