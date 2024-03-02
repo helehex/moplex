@@ -1,7 +1,7 @@
 # Moplex🔥
 Complex types for Mojo🔥
 
-Mojo version 0.7.0
+Mojo version 24.1
 
 Moplex provides generalized complex numbers for the mojo programming language.
 

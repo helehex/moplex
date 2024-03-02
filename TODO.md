@@ -3,8 +3,13 @@
 - fill out multiplex types
 - finish removing old work from infrared
     - fill out some of the missing simd operations
+- refactor testing
+- isnan(FloatLiteral) acting strange, same code works in another repo...
+    - casting to Float64 in `/solver.mojo` for now
+- rectify imaginary measure with hyperplex better, for pow and such
 - think about renaming `hybrid.s` to `hybrid.real`, and `hybrid.a` to `hybrid.anti`
 - think about renaming `hybrid.get_hybrid()` to `hybrid.get_lane()`
+- think more about which axis should take precedence
 - think about either:
     - use individual real and antiox types to distiguish things like `sqrt(Real(-1)) = i` vs. `sqrt(-1) = nan`,
     - keep going with distinguishing function names like hsqrt(-1), hexp(), etc..
