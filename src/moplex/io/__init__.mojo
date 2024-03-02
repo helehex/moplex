@@ -15,7 +15,15 @@ fn symbol[square: IntLiteral]() -> String:
     Returns:
         A string representing the unit antiox.
     """
-    return symbol[DType.float64, SIMD[DType.float64,1](square)]()
+    @parameter
+    if square == -1:
+        return "i"
+    elif square == 0:
+        return "o"
+    elif square == 1:
+        return "x"
+    else:
+        return "[" + str(square) + "]"
 
 fn symbol[square: FloatLiteral]() -> String:
     """
@@ -39,7 +47,7 @@ fn symbol[square: Int]() -> String:
     Returns:
         A string representing the unit antiox.
     """
-    return symbol[DType.float64, SIMD[DType.float64,1](square)]()
+    return symbol[DType.index, SIMD[DType.index,1](square)]()
 
 fn symbol[type: DType, square: SIMD[type,1]]() -> String:
     """
@@ -52,7 +60,6 @@ fn symbol[type: DType, square: SIMD[type,1]]() -> String:
     Returns:
         A string representing the unit antiox.
     """
-
     @parameter
     if square == -1:
         return "i"
@@ -61,4 +68,4 @@ fn symbol[type: DType, square: SIMD[type,1]]() -> String:
     elif square == 1:
         return "x"
     else:
-        return "[" + String(square) + "]"
+        return "[" + str(square) + "]"
