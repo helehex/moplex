@@ -1,3 +1,5 @@
+from moplex import *
+
 alias simd_type: DType = DType.float64
 alias simd_size = 4
 alias square = 1
@@ -337,8 +339,8 @@ fn test_math():
     print("o =  ", (div_paraplex*Paraplex64(-3,8)/Paraplex64(1,-2)))
     print("x =  ", (div_hyperplex*Hyperplex64(-3,8)/Hyperplex64(1,-2)))
     print()
-    print(HyperplexIntLiteral(1,2)*HyperplexIntLiteral(1,1))
-    print(HybridFloatLiteral[1](HyperplexIntLiteral(1,1)))
+    print(str(HyperplexIntLiteral(1,2)*HyperplexIntLiteral(1,1)))
+    print(str(HybridFloatLiteral[1](HyperplexIntLiteral(1,1))))
     print()
     print("0.0270820575 + 0.2927360563i = ", (Complex64(1,1)**Complex64(1,2)))
     print("-1 =  ", (Complex64(0,1)**2), "=", (Complex64(0,1)**Complex64(2,0)))
@@ -359,6 +361,16 @@ fn test_math():
     var multiplex = Multiplex64(10,2,3,4) / Multiplex64(-4,3,2,1)
     print(multiplex)
     print("10 + 2i + 3o + 4x =  ", (multiplex*Multiplex64(-4,3,2,1)))
-    
+
+alias tolerance = 1e-6
+
+fn test_hybrid_denomer[verbose: Bool = False, tolerance: FloatLiteral = tolerance, type: DType = DType.float64]() -> Bool:
+    return True
+
+fn test_hybrid_measure[verbose: Bool = False, tolerance: FloatLiteral = tolerance, type: DType = DType.float64]() -> Bool:
+    return True
+
+fn test_hybrid_argument[verbose: Bool = False, tolerance: FloatLiteral = tolerance, type: DType = DType.float64]() -> Bool:
+    return True
 
 alias SuperHyperplex64 = HybridSIMD[DType.float64,1,2] # next gen game system
