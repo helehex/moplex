@@ -29,6 +29,7 @@ fn nan_multiplex[type: DType, size: Int = 1, fail: Optional[MultiplexSIMD[type,1
 
 @always_inline
 fn isnan(value: FloatLiteral) -> Bool:
+    # var result = __mlir_op.`arith.cmpf`(value.value, value.value)
     return value != value
 
 @always_inline

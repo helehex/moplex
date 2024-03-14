@@ -1,11 +1,8 @@
 - better branch selection for lambert w
-- hybrid hyperbolic trig functions
+- fill out remaining hybrid trig functions
 - fill out multiplex types
-- finish removing old work from infrared
-    - fill out some of the missing simd operations
 - refactor testing
-- isnan(FloatLiteral) acting strange, same code works in another repo...
-    - casting to Float64 in `/solver.mojo` for now
+- improve isnan(FloatLiteral)
 - rectify imaginary measure with hyperplex better, for pow and such
 - think about renaming `hybrid.s` to `hybrid.real`, and `hybrid.a` to `hybrid.anti`
 - think about renaming `hybrid.get_hybrid()` to `hybrid.get_lane()`

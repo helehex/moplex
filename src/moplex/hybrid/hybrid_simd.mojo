@@ -116,6 +116,11 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         return Self{s:t.get[0, Int](), a:t.get[1, Int]()}
 
     @always_inline # Coefficients
+    fn __init__(t: Tuple[FloatLiteral, FloatLiteral]) -> Self:
+        """Initializes a HybridSIMD from coefficients."""
+        return Self{s:t.get[0, FloatLiteral](), a:t.get[1, FloatLiteral]()}
+
+    @always_inline # Coefficients
     fn __init__(t: Tuple[Scalar[type], Scalar[type]]) -> Self:
         """Initializes a HybridSIMD from coefficients."""
         return Self{s:t.get[0, Scalar[type]](), a:t.get[1, Scalar[type]]()}
@@ -161,11 +166,16 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     #
     @always_inline
     fn __bool__(self) -> Bool:
+        """Returns true when this hybrid number has a non zero measure."""
+        return self.is_nil()
+
+    @always_inline
+    fn is_zero(self) -> Bool:
         """Returns true when there are any non-zero parts."""
         return self.s.__bool__() or self.a.__bool__()
 
     @always_inline
-    fn nil(self) -> Bool:
+    fn is_nil(self) -> Bool:
         """Returns true when this hybrid number has a non zero measure."""
         return self.contrast() != 0
 
@@ -210,6 +220,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         else:
             result = Target(self.s.cast[target_type](), self.a.cast[target_type]() * factor)
             return True
+    
     
     #------( Formatting )------#
     #
@@ -359,10 +370,31 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         """Returns the length of the SIMD axis. Guaranteed to be a power of 2."""
         return size
 
-    # fma
+    # splat?
+
+    @always_inline
+    fn fma(self, mul: SIMD[type,size], acc: SIMD[type,size]) -> Self:
+        """Fused multiply add."""
+        return HybridSIMD[type,size,square](self.s.fma(mul, acc), self.a*mul)
+
+    @always_inline
+    fn fma[__:None=None](self, mul: Self, acc: SIMD[type,size]) -> Self:
+        """Fused multiply add."""
+        return HybridSIMD[type,size,square](self.s.fma(mul.s, self.a.fma(square*mul.a, acc)), self.s.fma(mul.a, self.a*mul.s))
+
+    @always_inline
+    fn fma[__:None=None](self, mul: SIMD[type,size], acc: Self) -> Self:
+        """Fused multiply add."""
+        return HybridSIMD[type,size,square](self.s.fma(mul, acc.s), self.a.fma(mul, acc.a))
+
+    @always_inline
+    fn fma[__:None=None, ___:None=None](self, mul: Self, acc: Self) -> Self:
+        """Fused multiply add."""
+        return HybridSIMD[type,size,square](self.s.fma(mul.s, self.a.fma(square*mul.a, acc.s)), self.s.fma(mul.a, self.a.fma(mul.s, acc.a)))
 
     @always_inline
     fn shuffle[*mask: Int](self) -> Self:
+        """Shuffle elements along the SIMD axis using a permutation mask."""
         alias l = len(VariadicList(mask))
         var result = HybridSIMD[type,size,square]()
         @unroll
@@ -371,6 +403,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
 
     @always_inline
     fn shuffle[*mask: Int](self, other: Self) -> Self:
+        """Shuffle elements along the SIMD axis using a permutation mask and add to other."""
         alias l = len(VariadicList(mask))
         var result = HybridSIMD[type,size,square]()
         @unroll
@@ -379,24 +412,29 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
 
     @always_inline
     fn slice[slice_size: Int](self, offset: Int) -> HybridSIMD[type,slice_size,square]:
+        """Returns a slice of the HybridSIMD vector with the specified size at a given offset."""
         return HybridSIMD[type,slice_size,square](self.s.slice[slice_size](offset), self.a.slice[slice_size](offset))
 
     @always_inline
     fn join(self, other: Self) -> HybridSIMD[type,2*size,square]:
+        """Concatenates the two HybridSIMD vectors together."""
         return HybridSIMD[type,2*size,square](self.s.join(other.s), self.a.join(other.a))
 
     @always_inline
     fn interleave(self, other: Self) -> HybridSIMD[type,2*size,square]:
+        """Returns a HybridSIMD vector that alternates between the two inputs."""
         return HybridSIMD[type,2*size,square](self.s.interleave(other.s), self.a.interleave(other.a))
 
     @always_inline
     fn deinterleave(self) -> StaticTuple[2, HybridSIMD[type,size//2,square]]:
+        """Deinterleaves this HybridSIMD vector into even and odd indicies."""
         var s = self.s.deinterleave()
         var a = self.a.deinterleave()
         return StaticTuple[2](HybridSIMD[type,size//2,square](s[0],a[0]), HybridSIMD[type,size//2,square](s[1],a[1]))
 
     @always_inline
     fn reduce[func: fn[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) capturing -> HybridSIMD[type,size,square], size_out: Int = 1](self) -> HybridSIMD[type,size_out,square]:
+        """Calls func recursively on this HybridSIMD to reduce it to the specified size."""
         @parameter
         if size_out >= size:
             return self.slice[size_out](0)
@@ -406,30 +444,36 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
 
     @always_inline
     fn reduce_add(self) -> HybridSIMD[type,1,square]:
+        """Returns the sum of all Hybrid elements accross the SIMD axis."""
         @parameter
         fn _add[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]: return a + b
         return self.reduce[_add]()
 
     @always_inline
     fn reduce_mul(self) -> HybridSIMD[type,1,square]:
+        """Returns the product of all Hybrid elements accross the SIMD axis."""
         @parameter
         fn _mul[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]: return a * b
         return self.reduce[_mul]()
 
     @always_inline
     fn rotate_left[shift: Int](self) -> Self:
+        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount (with wrap)."""
         return Self(self.s.rotate_left[shift](), self.a.rotate_left[shift]())
     
     @always_inline
     fn rotate_right[shift: Int](self) -> Self:
+        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount (with wrap)."""
         return Self(self.s.rotate_right[shift](), self.a.rotate_right[shift]())
     
     @always_inline
     fn shift_left[shift: Int](self) -> Self:
+        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount."""
         return Self(self.s.shift_left[shift](), self.a.shift_left[shift]())
     
     @always_inline
     fn shift_right[shift: Int](self) -> Self:
+        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount."""
         return Self(self.s.shift_right[shift](), self.a.shift_right[shift]())
 
 
