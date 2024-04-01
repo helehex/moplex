@@ -1,3 +1,4 @@
+
 """
 Implements the moplex random module.
 
@@ -16,9 +17,9 @@ from random import rand as _rand
 fn rand[type: DType, size: Int]() -> SIMD[type, size]:
     var p: DTypePointer[type] = stack_allocation[size, type]()
     _rand(p, size)
-    return p.simd_load[size]()
+    return p.load[width = size]()
 
-fn rand[type: DType, size: Int, square: Int]() -> HybridSIMD[type, size, square]:
+fn rand[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type, size, square]:
     return HybridSIMD[type,size,square](rand[type,size](), rand[type,size]())
 
 fn coin() -> Bool: return rand[DType.index,1]() < 0
@@ -33,7 +34,7 @@ fn random_sign[type: DType, size: Int]() -> SIMD[type,size]:
     if type.is_unsigned(): return 1
     return select[type, size](rand[DType.index,size]() < 0, -1, 1)
 
-fn random_sign[type: DType, size: Int, square: SIMD[type,1]]() -> HybridSIMD[type,size,square]:
+fn random_sign[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type,size,square]:
     """
     Returns a random hybrid number with measure equal to 1.
     """
@@ -56,7 +57,7 @@ fn random_sign[type: DType, size: Int, square: SIMD[type,1]]() -> HybridSIMD[typ
 fn random_frac[type: DType, size: Int]() -> SIMD[type,size]:
     return (rand[type,size]() * 2) - 1
 
-fn random_frac[type: DType, size: Int, square: SIMD[type,1]]() -> HybridSIMD[type,size,square]:
+fn random_frac[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type,size,square]:
     # change densities
     @parameter
     if square == -1:

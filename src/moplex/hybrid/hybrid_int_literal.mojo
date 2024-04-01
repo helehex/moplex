@@ -16,9 +16,9 @@ alias x: HyperplexIntLiteral = HyperplexIntLiteral(0,1)
 #------------ Hybrid Int Literal ------------#
 #---
 #---
-#@nonmaterializable(HybridInt[square]) #is this possible
+# @nonmaterializable
 @register_passable("trivial")
-struct HybridIntLiteral[square: Int](Stringable):
+struct HybridIntLiteral[square: FloatLiteral](Stringable):
     """
     Represent a hybrid integer literal with scalar and antiox parts.
 
@@ -36,8 +36,14 @@ struct HybridIntLiteral[square: Int](Stringable):
     alias Coef = IntLiteral
     """Represents a integer literal coefficient."""
 
-    alias unital_square: Int = sign(square)
+    alias _square: IntLiteral = square.__int_literal__()
+    """The squares natural type"""
+
+    alias unital_square = sign(square)
     """The normalized square."""
+
+    alias unital_factor = ufac(square)
+    """The unitization factor."""
 
 
     #------< Data >------#
@@ -61,18 +67,28 @@ struct HybridIntLiteral[square: Int](Stringable):
     #
     @always_inline
     fn __bool__(self) -> Bool:
-        """Returns true when there are any non-zero parts."""
-        return self.s.__bool__() or self.a.__bool__()
-
-    @always_inline
-    fn nil(self) -> Bool:
         """Returns true when this hybrid number has a non zero measure."""
-        return self.contrast() != 0
+        return not self.is_nil()
 
     @always_inline
-    fn to_tuple(self) -> StaticTuple[2, Self.Coef]:
+    fn is_zero(self) -> Bool:
+        """Returns true when both parts of this hybrid number are zero."""
+        return self.s == 0 and self.a == 0
+
+    @always_inline
+    fn is_nil(self) -> Bool:
+        """Returns true when this hybrid number has a non zero measure."""
+        return self.contrast() == 0
+
+    @always_inline
+    fn __hybrid_int__(self) -> HybridInt[square]:
+        """Casts the value to a HybridInt."""
+        return HybridInt[square](int(self.s), int(self.a))
+
+    @always_inline
+    fn to_tuple(self) -> StaticTuple[Self.Coef, 2]:
         """Creates a non-algebraic StaticTuple from the hybrids parts."""
-        return StaticTuple[2, Self.Coef](self.s, self.a)
+        return StaticTuple[Self.Coef, 2](self.s, self.a)
 
     @always_inline
     fn to_unital(self) -> HybridFloatLiteral[Self.unital_square]:
@@ -142,9 +158,7 @@ struct HybridIntLiteral[square: Int](Stringable):
     @always_inline
     fn __lt__(self, other: Self.Coef) -> Bool:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
-        @parameter
-        if square == 0: return self.measure() < abs(other)
-        else: return self.denomer() < other*other
+        return self.contrast() < contrast[square](other)
 
     @always_inline
     fn __le__(self, other: Self) -> Bool:
@@ -154,9 +168,7 @@ struct HybridIntLiteral[square: Int](Stringable):
     @always_inline
     fn __le__(self, other: Self.Coef) -> Bool:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() <= abs(other)
-        else: return self.denomer() <= other*other
+        return self.contrast() <= contrast[square](other)
 
     @always_inline
     fn __eq__(self, other: Self) -> Bool:
@@ -186,9 +198,7 @@ struct HybridIntLiteral[square: Int](Stringable):
     @always_inline
     fn __gt__(self, other: Self.Coef) -> Bool:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
-        @parameter
-        if square == 0: return self.measure() > abs(other)
-        else: return self.denomer() > other*other
+        return self.contrast() > contrast[square](other)
 
     @always_inline
     fn __ge__(self, other: Self) -> Bool:
@@ -198,9 +208,7 @@ struct HybridIntLiteral[square: Int](Stringable):
     @always_inline
     fn __ge__(self, other: Self.Coef) -> Bool:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() >= abs(other)
-        else: return self.denomer() >= other*other
+        return self.contrast() >= contrast[square](other)
 
 
     #------( Unary )------#
@@ -287,20 +295,20 @@ struct HybridIntLiteral[square: Int](Stringable):
         if square != 0: return sqrt(FloatLiteral(self.denomer[absolute]()))
         return abs(self.s)
 
-    @always_inline
-    fn argument[branch: Int = 0](self) -> FloatLiteral:
-        """Gets the argument of this hybrid number. *Work in progress, may change."""
-        @parameter
-        if square == -1: return atan2(FloatLiteral(self.a), FloatLiteral(self.s)) + branch*tau
-        elif square == 0: return FloatLiteral(self.a)/FloatLiteral(self.s)
-        elif square == 1: return log(abs(self.s + self.a) / self.measure[True]())
-        else:
-            print("not implemented in general case, maybe unitize would work but it's broken")
-            return 0
+    # @always_inline
+    # fn argument[branch: Int = 0](self) -> FloatLiteral:
+    #     """Gets the argument of this hybrid number. *Work in progress, may change."""
+    #     @parameter
+    #     if square == -1: return atan2(FloatLiteral(self.a), FloatLiteral(self.s)) + branch*tau
+    #     elif square == 0: return FloatLiteral(self.a)/FloatLiteral(self.s)
+    #     elif square == 1: return log(abs(self.s + self.a) / self.measure[True]())
+    #     else:
+    #         print("not implemented in general case, maybe unitize would work but it's broken")
+    #         return 0
 
     @always_inline
     fn normalized(self) -> HybridFloatLiteral[square]:
-        return self / self.measure()
+        return HybridFloatLiteral[square](self) / self.measure()
 
 
     #------( Products )------#
@@ -322,7 +330,7 @@ struct HybridIntLiteral[square: Int](Stringable):
         """
         @parameter
         if square == 0: return self.s*other.s
-        return self.s*other.s - to_int_literal[square]()*self.a*other.a
+        return self.s*other.s - Self._square*self.a*other.a
 
     @always_inline
     fn outer(self, other: Self) -> Self.Coef:
@@ -381,16 +389,16 @@ struct HybridIntLiteral[square: Int](Stringable):
 
     @always_inline # Hybrid * Hybrid
     fn __mul__(self, other: Self) -> Self:
-        return Self(self.s*other.s + to_int_literal[square]()*self.a*other.a, self.s*other.a + self.a*other.s)
+        return Self(self.s*other.s + Self._square*self.a*other.a, self.s*other.a + self.a*other.s)
 
     #--- division
     @always_inline # Hybrid / Scalar
     fn __truediv__(self, other: Self.Coef) -> HybridFloatLiteral[square]:
-        return HybridFloatLiteral[square](self) * FloatLiteral((1/other).value) # <------ fix, looks strange, alias problems with direct construction
+        return self / FloatLiteral(other) # <------ fix, looks strange, alias problems with direct construction
 
     @always_inline # Hybrid / Scalar
     fn __truediv__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
-        return HybridFloatLiteral[square](self) / other
+        return self * (1/other)
 
     @always_inline # Hybrid / Hybrid
     fn __truediv__(self, other: Self) -> HybridFloatLiteral[square]:
@@ -401,25 +409,25 @@ struct HybridIntLiteral[square: Int](Stringable):
         return Self(self.s // other, self.a // other)
 
     @always_inline # Hybrid // Scalar
-    fn __floordiv__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
-        return HybridFloatLiteral[square](self) // other
+    fn __floordiv__(self, other: FloatLiteral) -> Self:
+        return (self / other).__hybrid_int_literal__()
 
     @always_inline # Hybrid // Hybrid
     fn __floordiv__(self, other: Self) -> Self:
         return self*other.conjugate() // other.denomer()
 
     #--- exponentiation
-    @always_inline # Hybrid ** Scalar
-    fn __pow__(self, other: Self.Coef) -> HybridFloatLiteral[square]:
-        return pow(HybridFloatLiteral[square](self), FloatLiteral(other)) # <------ fix, looks strange, alias problems with direct construction
+    # @always_inline # Hybrid ** Scalar
+    # fn __pow__(self, other: Self.Coef) -> HybridFloatLiteral[square]:
+    #     return pow(HybridFloatLiteral[square](self), FloatLiteral(other)) # <------ fix, looks strange, alias problems with direct construction
     
-    @always_inline # Hybrid ** Scalar
-    fn __pow__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
-        return HybridFloatLiteral[square](self) ** other
+    # @always_inline # Hybrid ** Scalar
+    # fn __pow__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
+    #     return HybridFloatLiteral[square](self) ** other
 
-    @always_inline # Hybrid ** Hybrid
-    fn __pow__(self, other: Self) -> HybridFloatLiteral[square]:
-        return pow(HybridFloatLiteral[square](self), HybridFloatLiteral[square](other)) # <------ fix, looks strange, alias problems with direct construction
+    # @always_inline # Hybrid ** Hybrid
+    # fn __pow__(self, other: Self) -> HybridFloatLiteral[square]:
+    #     return pow(HybridFloatLiteral[square](self), HybridFloatLiteral[square](other)) # <------ fix, looks strange, alias problems with direct construction
 
     
     #------( Reverse Arithmetic )------#
@@ -481,25 +489,25 @@ struct HybridIntLiteral[square: Int](Stringable):
         return other*self.conjugate() // self.denomer()
 
     @always_inline # Hybrid // Scalar
-    fn __rfloordiv__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
-        return other // HybridFloatLiteral[square](self)
+    fn __rfloordiv__(self, other: FloatLiteral) -> Self:
+        return (other / self).__hybrid_int_literal__()
 
     @always_inline # Hybrid // Hybrid
     fn __rfloordiv__(self, other: Self) -> Self:
         return other // self
 
     #--- exponentiation
-    @always_inline # Scalar ** Hybrid
-    fn __rpow__(self, other: Self.Coef) -> HybridFloatLiteral[square]:
-        return pow(FloatLiteral(other), HybridFloatLiteral[square](self)) # <------ fix, looks strange, alias problems with direct construction
+    # @always_inline # Scalar ** Hybrid
+    # fn __rpow__(self, other: Self.Coef) -> HybridFloatLiteral[square]:
+    #     return pow(FloatLiteral(other), HybridFloatLiteral[square](self)) # <------ fix, looks strange, alias problems with direct construction
     
-    @always_inline # Hybrid ** Scalar
-    fn __rpow__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
-        return other ** HybridFloatLiteral[square](self)
+    # @always_inline # Hybrid ** Scalar
+    # fn __rpow__(self, other: FloatLiteral) -> HybridFloatLiteral[square]:
+    #     return other ** HybridFloatLiteral[square](self)
 
-    @always_inline # Hybrid ** Hybrid
-    fn __rpow__(self, other: Self) -> HybridFloatLiteral[square]:
-        return pow(HybridFloatLiteral[square](other), HybridFloatLiteral[square](self)) # <------ fix, looks strange, alias problems with direct construction
+    # @always_inline # Hybrid ** Hybrid
+    # fn __rpow__(self, other: Self) -> HybridFloatLiteral[square]:
+    #     return pow(HybridFloatLiteral[square](other), HybridFloatLiteral[square](self)) # <------ fix, looks strange, alias problems with direct construction
     
     
     #------( In Place Arithmetic )------#

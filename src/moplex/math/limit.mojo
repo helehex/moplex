@@ -3,7 +3,7 @@
 from math.math import nan as _nan
 from math.math import isnan as _isnan
 
-alias Nan: FloatLiteral = __mlir_attr.`0x7ff8000000000000:f64`
+alias NAN: FloatLiteral = __mlir_attr[`#kgen.float_literal<nan>`]
 
 
 @always_inline
@@ -14,7 +14,7 @@ fn nan[type: DType, size: Int = 1, fail: Optional[SIMD[type,1]] = None]() -> SIM
     return fail.value()
 
 @always_inline
-fn nan_hybrid[type: DType, square: SIMD[type,1], size: Int = 1, fail: Optional[HybridSIMD[type,1,square]] = None]() -> HybridSIMD[type,size,square]:
+fn nan_hybrid[type: DType, square: FloatLiteral, size: Int = 1, fail: Optional[HybridSIMD[type,1,square]] = None]() -> HybridSIMD[type,size,square]:
     @parameter
     if type.is_floating_point(): return (_nan[type](), _nan[type]())
     constrained[fail.__bool__(), "cannot get nan of integral dtype"]()
@@ -29,15 +29,14 @@ fn nan_multiplex[type: DType, size: Int = 1, fail: Optional[MultiplexSIMD[type,1
 
 @always_inline
 fn isnan(value: FloatLiteral) -> Bool:
-    # var result = __mlir_op.`arith.cmpf`(value.value, value.value)
-    return value != value
+    return __mlir_op.`kgen.float_literal.cmp`[pred = __mlir_attr.`#kgen<float_literal.cmp_pred ne>`](value.value, value.value)
 
 @always_inline
 fn isnan(value: SIMD) -> SIMD[DType.bool,value.size]:
     return _isnan(value)
 
 @always_inline
-fn isnan_hybrid[type: DType, size: Int, square: Scalar[type]](value: HybridSIMD[type,size,square]) -> SIMD[DType.bool, size]:
+fn isnan_hybrid[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> SIMD[DType.bool, size]:
     return _isnan(value.s) or _isnan(value.a)
 
 @always_inline

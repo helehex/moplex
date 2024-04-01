@@ -11,13 +11,18 @@ alias HyperplexInt = HybridInt[1]
 
 
 
+# #------ HybridIntable ------#
+# #
+# trait HybridIntable[square: Int]:
+#     fn __hybridint__(self) -> HybridInt[square]: ...
+
 
 #------------ Hybrid Int ------------#
 #---
-#--- not really necessary, but thats ok, it does allow for Int/Int to give a SIMD[DType.float64,1], thats the only thing i can really see
+#---
 #---
 @register_passable("trivial")
-struct HybridInt[square: Int](Stringable, CollectionElement):
+struct HybridInt[square: FloatLiteral](Stringable, CollectionElement):
     """
     Represent a hybrid integer type with scalar and antiox parts.
 
@@ -35,8 +40,14 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
     alias Coef = Int
     """Represents an integer coefficient."""
 
-    alias unital_square: Int = sign(square)
+    alias _square: Int = int(square)
+    """The squares natural type"""
+
+    alias unital_square = sign(square)
     """The normalized square."""
+
+    alias unital_factor = ufac(square)
+    """The unitization factor."""
 
 
     #------< Data >------#
@@ -65,26 +76,28 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
     #
     @always_inline
     fn __bool__(self) -> Bool:
-        """Returns true when there are any non-zero parts."""
-        return self.s.__bool__() or self.__bool__()
-
-    @always_inline
-    fn nil(self) -> Bool:
         """Returns true when this hybrid number has a non zero measure."""
-        return self.contrast() != 0
+        return not self.is_nil()
 
     @always_inline
-    fn to_tuple(self) -> StaticTuple[2, Self.Coef]:
+    fn is_zero(self) -> Bool:
+        """Returns true when both parts of this hybrid number are zero."""
+        return self.s == 0 and self.a == 0
+
+    @always_inline
+    fn is_nil(self) -> Bool:
+        """Returns true when this hybrid number has a non zero measure."""
+        return self.contrast() == 0
+
+    @always_inline
+    fn to_tuple(self) -> StaticTuple[Self.Coef, 2]:
         """Creates a non-algebraic StaticTuple from the hybrids parts."""
-        return StaticTuple[2, Self.Coef](self.s, self.a)
+        return StaticTuple[Self.Coef, 2](self.s, self.a)
 
     @always_inline
-    fn to_unital(self) -> HybridSIMD[DType.float64,1,Self.unital_square]:
+    fn to_unital(self) -> HybridFloat64[Self.unital_square]:
         """Unitize the HybridInt, this normalizes the square and adjusts the antiox coefficient."""
-        @parameter
-        if Self.unital_square == 1: return HybridSIMD[DType.float64,1,Self.unital_square](self.s, self.a * sqrt(SIMD[DType.float64,1](square)))
-        elif Self.unital_square == -1: return HybridSIMD[DType.float64,1,Self.unital_square](self.s, self.a * sqrt(SIMD[DType.float64,1](-square)))
-        else: return HybridSIMD[DType.float64,1,Self.unital_square](self.s, self.a)
+        return HybridFloat64[Self.unital_square](self.s, self.a * Self.unital_factor)
 
 
     #------( Formatting )------#
@@ -146,9 +159,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
     @always_inline
     fn __lt__(self, other: Self.Coef) -> Bool:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
-        @parameter
-        if square == 0: return self.measure() < abs(other)
-        else: return self.denomer() < other*other
+        return self.contrast() < contrast[square](other)
 
     @always_inline
     fn __le__(self, other: Self) -> Bool:
@@ -158,9 +169,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
     @always_inline
     fn __le__(self, other: Self.Coef) -> Bool:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() <= abs(other)
-        else: return self.denomer() <= other*other
+        return self.contrast() <= contrast[square](other)
 
     @always_inline
     fn __eq__(self, other: Self) -> Bool:
@@ -190,9 +199,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
     @always_inline
     fn __gt__(self, other: Self.Coef) -> Bool:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
-        @parameter
-        if square == 0: return self.measure() > abs(other)
-        else: return self.denomer() > other*other
+        return self.contrast() > contrast[square](other)
 
     @always_inline
     fn __ge__(self, other: Self) -> Bool:
@@ -202,9 +209,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
     @always_inline
     fn __ge__(self, other: Self.Coef) -> Bool:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() >= abs(other)
-        else: return self.denomer() >= other*other
+        return self.contrast() >= contrast[square](other)
 
 
     #------( Unary )------#
@@ -292,7 +297,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
         return abs(self.s)
 
     @always_inline
-    fn argument[branch: Int = 0](self) -> SIMD[DType.float64,1]:
+    fn argument[branch: Int = 0](self) -> Float64:
         """Gets the argument of this hybrid number. *Work in progress, may change."""
         @parameter
         if square == -1: return atan2(self.a, self.s) + branch*tau
@@ -303,7 +308,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
             return 0
 
     @always_inline
-    fn normalized(self) -> HybridSIMD[DType.float64,1,square]:
+    fn normalized(self) -> HybridFloat64[square]:
         return self / self.measure()
 
 
@@ -326,7 +331,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
         """
         @parameter
         if square == 0: return self.s*other.s
-        return self.s*other.s - square*self.a*other.a
+        return self.s*other.s - Self._square*self.a*other.a
 
     @always_inline
     fn outer(self, other: Self) -> Self.Coef:
@@ -385,7 +390,7 @@ struct HybridInt[square: Int](Stringable, CollectionElement):
 
     @always_inline # Hybrid * Hybrid
     fn __mul__(self, other: Self) -> Self:
-        return Self(self.s*other.s + square*self.a*other.a, self.s*other.a + self.a*other.s)
+        return Self(self.s*other.s + Self._square*self.a*other.a, self.s*other.a + self.a*other.s)
 
     #--- division
     @always_inline # Hybrid / Scalar

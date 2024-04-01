@@ -91,7 +91,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         return Self() + HybridSIMD[type,size,h.square](h)
 
     @always_inline # Hybrid
-    fn __init__[square: SIMD[type,1]](h: HybridSIMD[type,size,square]) -> Self:
+    fn __init__[square: FloatLiteral](h: HybridSIMD[type,size,square]) -> Self:
         """Initializes a MultiplexSIMD from a unital HybridSIMD."""
         return Self() + h
 
@@ -112,9 +112,9 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         """Returns true when there are any non-zero parts."""
         return self.s == 0 and self.i == 0 and self.o == 0 and self.x == 0
 
-    fn to_tuple(self) -> StaticTuple[4, Self.Coef]:
+    fn to_tuple(self) -> StaticTuple[Self.Coef, 4]:
         """Creates a non-algebraic StaticTuple from the multiplex parts."""
-        return StaticTuple[4, Self.Coef](self.s, self.i, self.o, self.x)
+        return StaticTuple[Self.Coef, 4](self.s, self.i, self.o, self.x)
 
     fn cast[target: DType](self) -> MultiplexSIMD[target, size]:
         """Casts the elements of the MultiplexSIMD to the target element type."""
@@ -381,7 +381,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         return Self(self.s + other, self.i, self.o, self.x)
 
     @always_inline # Multiplex + Hybrid
-    fn __add__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
+    fn __add__[square: FloatLiteral](self, other: HybridSIMD[type,size,square]) -> Self:
         var unital = other.to_unital()
         @parameter
         if unital.square == -1:
@@ -401,7 +401,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         return Self(self.s - other, self.i, self.o, self.x)
 
     @always_inline # Multiplex - Hybrid
-    fn __sub__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
+    fn __sub__[square: FloatLiteral](self, other: HybridSIMD[type,size,square]) -> Self:
         var unital = other.to_unital()
         @parameter
         if unital.square == -1:
@@ -454,7 +454,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         return Self(other + self.s, self.i, self.o, self.x)
 
     @always_inline # Hybrid + Multiplex
-    fn __radd__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
+    fn __radd__[square: FloatLiteral](self, other: HybridSIMD[type,size,square]) -> Self:
         var unital = other.to_unital()
         @parameter
         if unital.square == -1:
@@ -474,7 +474,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         return Self(other - self.s, -self.i, -self.o, -self.x)
 
     @always_inline # Hybrid - Multiplex
-    fn __rsub__[square: SIMD[type,1]](self, other: HybridSIMD[type,size,square]) -> Self:
+    fn __rsub__[square: FloatLiteral](self, other: HybridSIMD[type,size,square]) -> Self:
         var unital = other.to_unital()
         @parameter
         if unital.square == 1:
@@ -523,7 +523,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         self = self + other
 
     @always_inline # Multiplex += Hybrid
-    fn __iadd__[square: SIMD[type,1]](inout self, other: HybridSIMD[type,size,square]):
+    fn __iadd__[square: FloatLiteral](inout self, other: HybridSIMD[type,size,square]):
         self = self + other
     
     @always_inline # Multiplex += Multiplex
@@ -536,7 +536,7 @@ struct MultiplexSIMD[type: DType, size: Int = simdwidthof[type]()](Stringable, C
         self = self - other
 
     @always_inline # Multiplex -= Hybrid
-    fn __isub__[square: SIMD[type,1]](inout self, other: HybridSIMD[type,size,square]):
+    fn __isub__[square: FloatLiteral](inout self, other: HybridSIMD[type,size,square]):
         self = self - other
     
     @always_inline # Multiplex -= Multiplex

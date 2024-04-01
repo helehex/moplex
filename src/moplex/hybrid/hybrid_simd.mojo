@@ -13,7 +13,7 @@ alias ComplexUInt64 = HybridSIMD[DType.uint64,1,-1]
 alias Complex16     = HybridSIMD[DType.float16,1,-1]
 alias Complex32     = HybridSIMD[DType.float32,1,-1]
 alias Complex64     = HybridSIMD[DType.float64,1,-1]
-# alias Complex       = HybridSIMD[_, 1, -1]
+alias Complex       = HybridSIMD[_, 1, -1]
 
 alias ParaplexInt8   = HybridSIMD[DType.int8,1,0]
 alias ParaplexUInt8  = HybridSIMD[DType.uint8,1,0]
@@ -26,6 +26,7 @@ alias ParaplexUInt64 = HybridSIMD[DType.uint64,1,0]
 alias Paraplex16     = HybridSIMD[DType.float16,1,0]
 alias Paraplex32     = HybridSIMD[DType.float32,1,0]
 alias Paraplex64     = HybridSIMD[DType.float64,1,0]
+alias Paraplex       = HybridSIMD[_, 1, 0]
 
 alias HyperplexInt8   = HybridSIMD[DType.int8,1,1]
 alias HyperplexUInt8  = HybridSIMD[DType.uint8,1,1]
@@ -38,14 +39,20 @@ alias HyperplexUInt64 = HybridSIMD[DType.uint64,1,1]
 alias Hyperplex16     = HybridSIMD[DType.float16,1,1]
 alias Hyperplex32     = HybridSIMD[DType.float32,1,1]
 alias Hyperplex64     = HybridSIMD[DType.float64,1,1]
+alias Hyperplex       = HybridSIMD[_, 1, 0]
 
-fn constrain_square[type: DType, a: SIMD[type,1], b: FloatLiteral](): constrained[a == b, "mismatched 'square' parameter"]()
+alias HybridFloat64     = HybridSIMD[DType.float64, 1]
+
+fn _constrain_square[type: DType, a: SIMD[type,1], b: FloatLiteral](): constrained[a == b, "mismatched 'square' parameter"]()
+fn _constrain_square[type: DType, a: SIMD[type,1], b: Float64](): constrained[a == b, "mismatched 'square' parameter"]()
 
 @always_inline
-fn ufac[type: DType, size: Int, square: SIMD[type,size]]() -> SIMD[type,size]:
+fn _ufac[type: DType, size: Int, square: SIMD[type,size]]() -> SIMD[type,size]:
     @parameter
     if square == sign[type,size,square](): return 1
     else: return sqrt[type, size, abs[type, size, square]()]()
+
+
 
 
 
@@ -53,7 +60,7 @@ fn ufac[type: DType, size: Int, square: SIMD[type,size]]() -> SIMD[type,size]:
 #---
 #---
 @register_passable("trivial")
-struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, CollectionElement):
+struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](Stringable, CollectionElement):
     """
     Represents a hybrid small vector backed by hardware vector elements, with scalar and antiox parts.
 
@@ -74,19 +81,22 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
 
     #------[ Alias ]------#
     #
+    alias Type = HybridSIMD[type,size,square]
+    """Self."""
+
     alias Coef = SIMD[type,size]
     """Represents a SIMD coefficient."""
 
     alias Lane = HybridSIMD[type,1,square]
     """Represents a single SIMD vector element."""
 
-    alias unital_square = sign[type,1,square]()
+    alias unital_square: FloatLiteral = sign(square)
     """The normalized square."""
 
-    alias unital_factor = ufac[type,1,square]()
+    alias unital_factor: FloatLiteral = ufac(square)
     """The unitization factor."""
 
-    alias Type = HybridSIMD[type,size,square]
+
     
 
     #------< Data >------#
@@ -146,19 +156,19 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline # Hybrid
     fn __init__(h: HybridIntLiteral) -> Self:
         """Initializes a HybridSIMD from a HybridIntLiteral."""
-        constrain_square[type, square, h.square]()
+        _constrain_square[type, square, h.square]()
         return Self{s:h.s, a:h.a}
 
     @always_inline # Hybrid
     fn __init__(h: HybridFloatLiteral) -> Self:
         """Initializes a HybridSIMD from a HybridFloatLiteral."""
-        constrain_square[type, square, h.square]()
+        _constrain_square[type, square, h.square]()
         return Self{s:h.s, a:h.a}
 
     @always_inline # Hybrid
     fn __init__(h: HybridInt) -> Self:
         """Initializes a HybridSIMD from a HybridInt."""
-        constrain_square[type, square, h.square]()
+        _constrain_square[type, square, h.square]()
         return Self{s:h.s, a:h.a}
 
 
@@ -167,54 +177,54 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline
     fn __bool__(self) -> Bool:
         """Returns true when this hybrid number has a non zero measure."""
-        return self.is_nil()
+        return not self.is_nil()
 
     @always_inline
     fn is_zero(self) -> Bool:
-        """Returns true when there are any non-zero parts."""
-        return self.s.__bool__() or self.a.__bool__()
+        """Returns true when both parts of this hybrid number are zero."""
+        return self.s == 0 and self.a == 0
 
     @always_inline
     fn is_nil(self) -> Bool:
         """Returns true when this hybrid number has a non zero measure."""
-        return self.contrast() != 0
+        return self.contrast() == 0
 
     @always_inline
-    fn to_int(self) -> HybridInt[square.to_int()]:
+    fn __hybrid_int__(self) -> HybridInt[square]:
         """Casts the value to a HybridInt. Any fractional components are truncated towards zero."""
-        return HybridInt[square.to_int()](self.s.to_int(), self.a.to_int())
+        return HybridInt[square](int(self.s), int(self.a))
 
     @always_inline
-    fn to_tuple(self) -> StaticTuple[2, Self.Coef]:
+    fn to_tuple(self) -> StaticTuple[Self.Coef, 2]:
         """Creates a non-algebraic StaticTuple from the hybrids parts."""
-        return StaticTuple[2, Self.Coef](self.s, self.a)
+        return StaticTuple[Self.Coef, 2](self.s, self.a)
 
     @always_inline
     fn to_unital(self) -> HybridSIMD[type, size, Self.unital_square]:
         """Unitize the HybridSIMD, this normalizes the square and adjusts the antiox coefficient."""
-        return HybridSIMD[type,size,Self.unital_square](self.s, self.a * Self.unital_factor)
+        return HybridSIMD[type, size, Self.unital_square](self.s, self.a * Self.unital_factor)
 
     @always_inline
-    fn cast[target_type: DType = type, target_square: SIMD[target_type,1] = square.cast[target_type]()](self) -> HybridSIMD[target_type, size, target_square]:
+    fn cast[target_type: DType = type, target_square: FloatLiteral = square](self) -> HybridSIMD[target_type, size, target_square]:
         """Casts the elements of the HybridSIMD to the target type and square type."""
         alias Target = HybridSIMD[target_type,size,target_square]
-        alias factor = Self.unital_factor.cast[target_type]() / Target.unital_factor
-        constrained[Self.unital_square.cast[target_type]() == Target.unital_square, "cannot cast to target square"]()
+        alias factor = Self.unital_factor / Target.unital_factor
+        constrained[Self.unital_square == Target.unital_square, "cannot cast to target square"]()
         return Target(self.s.cast[target_type](), self.a.cast[target_type]() * factor)
     
     @always_inline
     fn try_cast[
         target_type: DType = type,
-        target_square: SIMD[target_type,1] = square.cast[target_type](),
+        target_square: FloatLiteral = square,
         fail: HybridSIMD[target_type, 1, target_square] = nan_hybrid[target_type, target_square, 1, HybridSIMD[target_type, 1, target_square](0)]()
         ](self, inout result: HybridSIMD[target_type, size, target_square]) -> Bool:
         """Casts the elements of the HybridSIMD to the target type and square type."""
 
         alias Target = HybridSIMD[target_type,size,target_square]
-        alias factor = Self.unital_factor.cast[target_type]() / Target.unital_factor
+        alias factor = Self.unital_factor / Target.unital_factor
         
         @parameter
-        if Self.unital_square.cast[target_type]() != Target.unital_square:
+        if Self.unital_square != Target.unital_square:
             result = fail
             return False
         else:
@@ -303,15 +313,15 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         self.a[idx] = item.a
 
     @always_inline
-    fn get_antiox[square: SIMD[type,1]](self) -> SIMD[type,size]:
+    fn get_antiox[square: FloatLiteral](self) -> SIMD[type,size]:
         @parameter
         if sign[type,1,Self.square]() != sign[type,1,square](): return 0
-        else: return self.a * (Self.unital_factor / ufac[type,1,square]())
+        else: return self.a * (Self.unital_factor / ufac(square))
 
     @always_inline
-    fn set_antiox[square: SIMD[type,1]](inout self, antiox: SIMD[type,size]):
+    fn set_antiox[square: FloatLiteral](inout self, antiox: SIMD[type,size]):
         constrained[sign[type,1,Self.square]() == sign[type,1,square](), "cannot set antiox. square not contained in this hybrid algebra"]()
-        self.a = antiox * (ufac[type,1,square]() / Self.unital_factor)
+        self.a = antiox * (ufac(square) / Self.unital_factor)
 
 
     #------( Min / Max )------#
@@ -395,20 +405,12 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline
     fn shuffle[*mask: Int](self) -> Self:
         """Shuffle elements along the SIMD axis using a permutation mask."""
-        alias l = len(VariadicList(mask))
-        var result = HybridSIMD[type,size,square]()
-        @unroll
-        for i in range(l): result[i] = self[mask[i]]
-        return result
+        return Self(self.s._shuffle_list[mask](self.s), self.a._shuffle_list[mask](self.a))
 
     @always_inline
     fn shuffle[*mask: Int](self, other: Self) -> Self:
         """Shuffle elements along the SIMD axis using a permutation mask and add to other."""
-        alias l = len(VariadicList(mask))
-        var result = HybridSIMD[type,size,square]()
-        @unroll
-        for i in range(l): result[i] = (self + other)[mask[i]]
-        return result
+        return Self(self.s._shuffle_list[mask](other.s), self.a._shuffle_list[mask](other.a))
 
     @always_inline
     fn slice[slice_size: Int](self, offset: Int) -> HybridSIMD[type,slice_size,square]:
@@ -426,14 +428,17 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         return HybridSIMD[type,2*size,square](self.s.interleave(other.s), self.a.interleave(other.a))
 
     @always_inline
-    fn deinterleave(self) -> StaticTuple[2, HybridSIMD[type,size//2,square]]:
+    fn deinterleave(self) -> StaticTuple[HybridSIMD[type,size//2,square], 2]:
         """Deinterleaves this HybridSIMD vector into even and odd indicies."""
         var s = self.s.deinterleave()
         var a = self.a.deinterleave()
-        return StaticTuple[2](HybridSIMD[type,size//2,square](s[0],a[0]), HybridSIMD[type,size//2,square](s[1],a[1]))
+        return StaticTuple[HybridSIMD[type,size//2,square], 2](HybridSIMD[type,size//2,square](s[0],a[0]), HybridSIMD[type,size//2,square](s[1],a[1]))
 
     @always_inline
-    fn reduce[func: fn[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) capturing -> HybridSIMD[type,size,square], size_out: Int = 1](self) -> HybridSIMD[type,size_out,square]:
+    fn reduce[
+        func: fn[size: Int](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) capturing -> HybridSIMD[type,size,square], 
+        size_out: Int = 1
+        ](self) -> HybridSIMD[type,size_out,square]:
         """Calls func recursively on this HybridSIMD to reduce it to the specified size."""
         @parameter
         if size_out >= size:
@@ -487,9 +492,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline
     fn __lt__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
-        @parameter
-        if square == 0: return self.measure() < abs(other)
-        else: return self.denomer() < other*other
+        return self.contrast() < contrast[square](other)
 
     @always_inline
     fn __le__(self, other: Self) -> SIMD[DType.bool,size]:
@@ -499,9 +502,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline
     fn __le__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() <= abs(other)
-        else: return self.denomer() <= other*other
+        return self.contrast() <= contrast[square](other)
 
     @always_inline
     fn __eq__(self, other: Self) -> SIMD[DType.bool,size]:
@@ -531,9 +532,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline
     fn __gt__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
-        @parameter
-        if square == 0: return self.measure() > abs(other)
-        else: return self.denomer() > other*other
+        return self.contrast() > contrast[square](other)
 
     @always_inline
     fn __ge__(self, other: Self) -> SIMD[DType.bool,size]:
@@ -543,9 +542,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
     @always_inline
     fn __ge__(self, other: Self.Coef) -> SIMD[DType.bool,size]:
         """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
-        @parameter
-        if square == 0: return self.measure() >= abs(other)
-        else: return self.denomer() >= other*other
+        return self.contrast() >= contrast[square](other)
 
 
     #------( Unary )------#
@@ -723,7 +720,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         return Self(self.s + other.s, self.a + other.a)
 
     @always_inline # Hybrid + Hybrid
-    fn __add__[square: SIMD[type,1], __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
+    fn __add__[square: FloatLiteral, __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
         return MultiplexSIMD(self) + other
 
     #--- subtraction
@@ -736,7 +733,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         return Self(self.s - other.s, self.a - other.a)
 
     @always_inline # Hybrid - Hybrid
-    fn __sub__[square: SIMD[type,1], __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
+    fn __sub__[square: FloatLiteral, __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
         return MultiplexSIMD(self) - other
 
     #--- multiplication
@@ -787,7 +784,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         return other + self
 
     @always_inline # Hybrid + Hybrid
-    fn __radd__[square: SIMD[type,1], __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
+    fn __radd__[square: FloatLiteral, __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
         return other + self
 
     #--- subtraction
@@ -800,7 +797,7 @@ struct HybridSIMD[type: DType, size: Int, square: Scalar[type]](Stringable, Coll
         return other - self
 
     @always_inline # Hybrid - Hybrid
-    fn __rsub__[square: SIMD[type,1], __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
+    fn __rsub__[square: FloatLiteral, __:None=None](self, other: HybridSIMD[type,size,square]) -> MultiplexSIMD[type,size]:
         return other - self
 
     #--- multiplication

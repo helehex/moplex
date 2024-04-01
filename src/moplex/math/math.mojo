@@ -21,7 +21,7 @@ fn select[type: DType, size: Int](cond: SIMD[DType.bool,size], true_case: SIMD[t
     return _select(cond, true_case, false_case)
 
 @always_inline # Hybrid _ Scalar
-fn select[type: DType, size: Int, square: SIMD[type,1]](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: SIMD[type,size]) -> HybridSIMD[type,size,square]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -41,7 +41,7 @@ fn select[type: DType, size: Int, square: SIMD[type,1]](cond: SIMD[DType.bool,si
     return HybridSIMD[type,size,square](select(cond, true_case.s, false_case), select(cond, true_case.a, 0))
 
 @always_inline # Scalar _ Hybrid
-fn select[type: DType, size: Int, square: SIMD[type,1]](cond: SIMD[DType.bool,size], true_case: SIMD[type,size], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: SIMD[type,size], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -61,7 +61,7 @@ fn select[type: DType, size: Int, square: SIMD[type,1]](cond: SIMD[DType.bool,si
     return HybridSIMD[type,size,square](select(cond, true_case, false_case.s), select(cond, 0, false_case.a))
 
 @always_inline # Hybrid _ Hybrid
-fn select[type: DType, size: Int, square: SIMD[type,1]](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -116,7 +116,7 @@ fn sqrt[type: DType, size: Int, value: SIMD[type,size]]() -> SIMD[type,size]:
 @always_inline
 fn sqrt(value: FloatLiteral) -> FloatLiteral:
     """Returns the square root of the input FloatLiteral. This may change."""
-    return _sqrt(Float64(value)).value
+    return 1/rsqrt(value)
 
 @always_inline # mock std
 fn sqrt(value: Int) -> Int:
@@ -145,7 +145,7 @@ fn sqrt(value: SIMD) -> SIMD[value.type, value.size]:
     return _sqrt(value)
 
 @always_inline
-fn sqrt[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn sqrt[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     return pow(value, 0.5)
 
 
@@ -173,7 +173,12 @@ fn rsqrt[type: DType, size: Int, value: SIMD[type,size]]() -> SIMD[type,size]:
 @always_inline
 fn rsqrt(value: FloatLiteral) -> FloatLiteral:
     """Returns the reciprocal square root of the input FloatLiteral. This may change."""
-    return rsqrt(Float64(value)).value
+    @parameter
+    fn f(value: FloatLiteral) -> FloatLiteral: return 1/(value*value)
+
+    @parameter
+    fn df(value: FloatLiteral) -> FloatLiteral: return -2/(value*value*value)
+    return newtons_method[f, df, 8, 1e-8](2/(value + 1), value)
 
 @always_inline # mock std
 fn rsqrt(value: SIMD) -> SIMD[value.type, value.size]:
@@ -189,7 +194,7 @@ fn rsqrt(value: SIMD) -> SIMD[value.type, value.size]:
     return _rsqrt(value)
 
 @always_inline
-fn rsqrt[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn rsqrt[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     return pow(value, -0.5)
 
 
@@ -198,10 +203,10 @@ fn rsqrt[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,si
 #
 from math import exp as _exp
 
-@always_inline
-fn exp(value: FloatLiteral) -> FloatLiteral:
-    """Returns e^value for the input FloatLiteral. This may change."""
-    return exp(Float64(value)).value
+# @always_inline
+# fn exp(value: FloatLiteral) -> FloatLiteral:
+#     """Returns e^value for the input FloatLiteral. This may change."""
+#     return exp(Float64(value)).value
 
 @always_inline # mock std
 fn exp(value: SIMD) -> SIMD[value.type, value.size]:
@@ -216,9 +221,9 @@ fn exp(value: SIMD) -> SIMD[value.type, value.size]:
     """
     return _exp(value)
 
-# change to use antiox type
+# change to use antiox type?
 @always_inline
-fn expa[type: DType, size: Int, square: SIMD[type,1]](value: SIMD[type, size]) -> HybridSIMD[type, size, square]:
+fn expa[type: DType, size: Int, square: FloatLiteral](value: SIMD[type, size]) -> HybridSIMD[type, size, square]:
     """
     Antiox exponential.
 
@@ -241,11 +246,11 @@ fn expa[type: DType, size: Int, square: SIMD[type,1]](value: SIMD[type, size]) -
     elif square == 1: return HybridSIMD[type, size, square](cosh(value), sinh(value))
 
     var conversion = sqrt(abs[type,1,square]())
-    var result = expa[type,size,sign[type,1,square]()](value*conversion)
+    var result = expa[type,size,sign(square)](value*conversion)
     return HybridSIMD[type, size, square](result.s, result.a/conversion)
 
 @always_inline
-fn exp[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
+fn exp[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
     """
     Hybrid exponential.
 
@@ -271,28 +276,28 @@ fn exp[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type, siz
 #
 from math import pow as _pow
 
-@always_inline
-fn pow(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
-    """Mocks stdlib."""
-    return pow(Float64(a), Float64(b)).value
+# @always_inline
+# fn pow(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
+#     """Mocks stdlib."""
+#     return pow(Float64(a), Float64(b)).value
 
-@always_inline
-fn pow[square: FloatLiteral](a: HybridFloatLiteral[square], b: FloatLiteral) -> HybridFloatLiteral[square]:
-    """FloatLiteral version of hybrid pow."""
-    var result = pow[DType.float64,1,square](a, b)
-    return HybridFloatLiteral[square](result.s.value, result.a.value)
+# @always_inline
+# fn pow[square: FloatLiteral](a: HybridFloatLiteral[square], b: FloatLiteral) -> HybridFloatLiteral[square]:
+#     """FloatLiteral version of hybrid pow."""
+#     var result = pow[DType.float64,1,square](a, b)
+#     return HybridFloatLiteral[square](result.s.value, result.a.value)
 
-@always_inline
-fn pow[square: FloatLiteral](a: FloatLiteral, b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
-    """FloatLiteral version of hybrid pow."""
-    var result = pow[DType.float64,1,square](a, b)
-    return HybridFloatLiteral[square](result.s.value, result.a.value)
+# @always_inline
+# fn pow[square: FloatLiteral](a: FloatLiteral, b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
+#     """FloatLiteral version of hybrid pow."""
+#     var result = pow[DType.float64,1,square](a, b)
+#     return HybridFloatLiteral[square](result.s.value, result.a.value)
 
-@always_inline
-fn pow[square: FloatLiteral](a: HybridFloatLiteral[square], b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
-    """FloatLiteral version of hybrid pow."""
-    var result = pow[DType.float64,1,square](a, b)
-    return HybridFloatLiteral[square](result.s.value, result.a.value)
+# @always_inline
+# fn pow[square: FloatLiteral](a: HybridFloatLiteral[square], b: HybridFloatLiteral[square]) -> HybridFloatLiteral[square]:
+#     """FloatLiteral version of hybrid pow."""
+#     var result = pow[DType.float64,1,square](a, b)
+#     return HybridFloatLiteral[square](result.s.value, result.a.value)
 
 @always_inline
 fn pow(a: SIMD, b: Int) -> SIMD[a.type, a.size]:
@@ -305,7 +310,7 @@ fn pow(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
     return _pow(a, b)
 
 @always_inline
-fn pow[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type,size,square], b: Int) -> HybridSIMD[type,size,square]:
+fn pow[type: DType, size: Int, square: FloatLiteral](a: HybridSIMD[type,size,square], b: Int) -> HybridSIMD[type,size,square]:
     """
     Computes elementwise power of a hybrid type raised to another hybrid type.
 
@@ -324,7 +329,7 @@ fn pow[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type,size,squ
     return pow(a.measure[True](),b)*expa[type,size,square](a.argument()*b)
 
 @always_inline
-fn pow[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type,size,square], b: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+fn pow[type: DType, size: Int, square: FloatLiteral](a: HybridSIMD[type,size,square], b: SIMD[type,size]) -> HybridSIMD[type,size,square]:
     """
     Computes elementwise power of a HybridSIMD type raised to a SIMD type.
 
@@ -345,7 +350,7 @@ fn pow[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type,size,squ
     return exp(b*log(a))
 
 @always_inline
-fn pow[type: DType, size: Int, square: SIMD[type,1]](a: SIMD[type,size], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn pow[type: DType, size: Int, square: FloatLiteral](a: SIMD[type,size], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Computes elementwise power of a SIMD type raised to a HybridSIMD type.
 
@@ -364,7 +369,7 @@ fn pow[type: DType, size: Int, square: SIMD[type,1]](a: SIMD[type,size], b: Hybr
     return exp(b*log(a))
 
 @always_inline
-fn pow[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn pow[type: DType, size: Int, square: FloatLiteral, branch: Int = 0](a: HybridSIMD[type,size,square], b: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Computes elementwise power of a HybridSIMD type raised to another HybridSIMD type.
 
@@ -392,10 +397,10 @@ fn pow[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](a: HybridS
 #
 from math import log as _log
 
-@always_inline # mock std
-fn log(value: FloatLiteral) -> FloatLiteral:
-    """Returns the logarithm of the input FloatLiteral. May change."""
-    return log(Float64(value)).value
+# @always_inline # mock std
+# fn log(value: FloatLiteral) -> FloatLiteral:
+#     """Returns the logarithm of the input FloatLiteral. May change."""
+#     return log(Float64(value)).value
 
 @always_inline # mock
 fn log(value: SIMD) -> SIMD[value.type, value.size]:
@@ -411,7 +416,7 @@ fn log(value: SIMD) -> SIMD[value.type, value.size]:
     return _log(value)
 
 @always_inline
-fn log[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn log[type: DType, size: Int, square: FloatLiteral, branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Performs elementwise natural log (base E) of a HybridSIMD vector.
 
@@ -431,16 +436,16 @@ fn log[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: Hyb
 #------( Lambert W )------#
 #
 @always_inline
-fn _xex[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn _xex[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     return value*exp(value)
 
 @always_inline
-fn _dxex[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn _dxex[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     var ex = exp(value)
     return ex + value*ex
 
 @always_inline
-fn lw[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn lw[type: DType, size: Int, square: FloatLiteral, branch: Int = 0](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Computes the elementwise Lambert W function of a HybridSIMD vector.
 
@@ -472,10 +477,10 @@ fn lw[type: DType, size: Int, square: SIMD[type,1], branch: Int = 0](value: Hybr
 #
 from math import sin as _sin
 
-@always_inline
-fn sin(value: FloatLiteral) -> FloatLiteral:
-    """Computes sine of the input."""
-    return sin(Float64(value)).value
+# @always_inline
+# fn sin(value: FloatLiteral) -> FloatLiteral:
+#     """Computes sine of the input."""
+#     return sin(Float64(value)).value
 
 @always_inline
 fn sin(value: SIMD) -> SIMD[value.type, value.size]:
@@ -483,7 +488,7 @@ fn sin(value: SIMD) -> SIMD[value.type, value.size]:
     return _sin(value)
 
 @always_inline
-fn sin[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn sin[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes sine of the input."""
     @parameter
     if square == -1: return HybridSIMD[type,size,square](sin(value.s) * cosh(value.a), cos(value.s) * sinh(value.a))
@@ -499,10 +504,10 @@ fn sin[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 #
 from math import cos as _cos
 
-@always_inline
-fn cos(value: FloatLiteral) -> FloatLiteral:
-    """Computes cosine of the input."""
-    return cos(Float64(value)).value
+# @always_inline
+# fn cos(value: FloatLiteral) -> FloatLiteral:
+#     """Computes cosine of the input."""
+#     return cos(Float64(value)).value
 
 @always_inline
 fn cos(value: SIMD) -> SIMD[value.type, value.size]:
@@ -510,7 +515,7 @@ fn cos(value: SIMD) -> SIMD[value.type, value.size]:
     return _cos(value)
 
 @always_inline
-fn cos[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn cos[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes cosine of the input."""
     @parameter
     if square == -1: return HybridSIMD[type,size,square](cos(value.s) * cosh(value.a), -sin(value.s) * sinh(value.a))
@@ -526,10 +531,10 @@ fn cos[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 #
 from math import tan as _tan
 
-@always_inline
-fn tan(value: FloatLiteral) -> FloatLiteral:
-    """Computes tangent of the input."""
-    return tan(Float64(value)).value
+# @always_inline
+# fn tan(value: FloatLiteral) -> FloatLiteral:
+#     """Computes tangent of the input."""
+#     return tan(Float64(value)).value
 
 @always_inline
 fn tan(value: SIMD) -> SIMD[value.type, value.size]:
@@ -537,7 +542,7 @@ fn tan(value: SIMD) -> SIMD[value.type, value.size]:
     return _tan(value)
 
 @always_inline
-fn tan[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn tan[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes tangent of the input."""
     # check if 2* is optimized
     @parameter
@@ -552,10 +557,10 @@ fn tan[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 
 #------( Cotangent )------#
 #
-@always_inline
-fn cot(value: FloatLiteral) -> FloatLiteral:
-    """Computes cotangent of the input."""
-    return tan(hfpi - value)
+# @always_inline
+# fn cot(value: FloatLiteral) -> FloatLiteral:
+#     """Computes cotangent of the input."""
+#     return tan(hfpi - value)
 
 @always_inline
 fn cot(value: SIMD) -> SIMD[value.type, value.size]:
@@ -563,7 +568,7 @@ fn cot(value: SIMD) -> SIMD[value.type, value.size]:
     return tan(hfpi - value)
 
 @always_inline
-fn cot[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn cot[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes cotangent of the input."""
     # check if 1/tan is optimized
     @parameter
@@ -578,10 +583,10 @@ fn cot[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 
 #------ Secant ------#
 #
-@always_inline
-fn sec(value: FloatLiteral) -> FloatLiteral:
-    """Computes secant of the input."""
-    return 1/cos(value)
+# @always_inline
+# fn sec(value: FloatLiteral) -> FloatLiteral:
+#     """Computes secant of the input."""
+#     return 1/cos(value)
 
 @always_inline
 fn sec(value: SIMD) -> SIMD[value.type, value.size]:
@@ -589,7 +594,7 @@ fn sec(value: SIMD) -> SIMD[value.type, value.size]:
     return 1/cos(value)
 
 @always_inline
-fn sec[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn sec[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes secant of the input."""
     return 1/cos(value)
 
@@ -598,10 +603,10 @@ fn sec[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 
 #------ Cosecant ------#
 #
-@always_inline
-fn csc(value: FloatLiteral) -> FloatLiteral:
-    """Computes cosecant of the input."""
-    return 1/sin(value)
+# @always_inline
+# fn csc(value: FloatLiteral) -> FloatLiteral:
+#     """Computes cosecant of the input."""
+#     return 1/sin(value)
 
 @always_inline
 fn csc(value: SIMD) -> SIMD[value.type, value.size]:
@@ -609,7 +614,7 @@ fn csc(value: SIMD) -> SIMD[value.type, value.size]:
     return 1/sin(value)
 
 @always_inline
-fn csc[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn csc[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """Computes cosecant of the input."""
     return 1/sin(value)
 
@@ -620,10 +625,10 @@ fn csc[type: DType, size: Int, square: SIMD[type,1]](value: HybridSIMD[type,size
 #
 from math import sinh as _sinh
 
-@always_inline
-fn sinh(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic sine of the input."""
-    return sinh(Float64(value)).value
+# @always_inline
+# fn sinh(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic sine of the input."""
+#     return sinh(Float64(value)).value
 
 @always_inline
 fn sinh(value: SIMD) -> SIMD[value.type, value.size]:
@@ -637,10 +642,10 @@ fn sinh(value: SIMD) -> SIMD[value.type, value.size]:
 #
 from math import cosh as _cosh
 
-@always_inline
-fn cosh(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic cosine of the input."""
-    return cosh(Float64(value)).value
+# @always_inline
+# fn cosh(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic cosine of the input."""
+#     return cosh(Float64(value)).value
 
 @always_inline
 fn cosh(value: SIMD) -> SIMD[value.type, value.size]:
@@ -654,10 +659,10 @@ fn cosh(value: SIMD) -> SIMD[value.type, value.size]:
 #
 from math import tanh as _tanh
 
-@always_inline
-fn tanh(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic tangent of the input."""
-    return tanh(Float64(value)).value
+# @always_inline
+# fn tanh(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic tangent of the input."""
+#     return tanh(Float64(value)).value
 
 @always_inline
 fn tanh(value: SIMD) -> SIMD[value.type, value.size]:
@@ -669,10 +674,10 @@ fn tanh(value: SIMD) -> SIMD[value.type, value.size]:
 
 #------( Hyperbolic Cotangent )------#
 #
-@always_inline
-fn coth(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic cotangent of the input."""
-    return 1/tanh(value)
+# @always_inline
+# fn coth(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic cotangent of the input."""
+#     return 1/tanh(value)
 
 @always_inline
 fn coth(value: SIMD) -> SIMD[value.type, value.size]:
@@ -684,10 +689,10 @@ fn coth(value: SIMD) -> SIMD[value.type, value.size]:
 
 #------( Hyperbolic Secant )------#
 #
-@always_inline
-fn sech(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic secant of the input."""
-    return 1/cosh(value)
+# @always_inline
+# fn sech(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic secant of the input."""
+#     return 1/cosh(value)
 
 @always_inline
 fn sech(value: SIMD) -> SIMD[value.type, value.size]:
@@ -699,10 +704,10 @@ fn sech(value: SIMD) -> SIMD[value.type, value.size]:
 
 #------( Hyperbolic Cosecant )------#
 #
-@always_inline
-fn csch(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic cosecant of the input."""
-    return 1/sinh(value)
+# @always_inline
+# fn csch(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic cosecant of the input."""
+#     return 1/sinh(value)
 
 @always_inline
 fn csch(value: SIMD) -> SIMD[value.type, value.size]:
@@ -716,10 +721,10 @@ fn csch(value: SIMD) -> SIMD[value.type, value.size]:
 #
 from math import asin as _asin
 
-@always_inline
-fn asin(value: FloatLiteral) -> FloatLiteral:
-    """Computes the arcsine of the input."""
-    return _asin(Float64(value)).value
+# @always_inline
+# fn asin(value: FloatLiteral) -> FloatLiteral:
+#     """Computes the arcsine of the input."""
+#     return _asin(Float64(value)).value
 
 @always_inline
 fn asin(value: SIMD) -> SIMD[value.type, value.size]:
@@ -733,10 +738,10 @@ fn asin(value: SIMD) -> SIMD[value.type, value.size]:
 #
 from math import acos as _acos
 
-@always_inline
-fn acos(value: FloatLiteral) -> FloatLiteral:
-    """Computes the arccosine of the input."""
-    return _acos(Float64(value)).value
+# @always_inline
+# fn acos(value: FloatLiteral) -> FloatLiteral:
+#     """Computes the arccosine of the input."""
+#     return _acos(Float64(value)).value
 
 @always_inline
 fn acos(value: SIMD) -> SIMD[value.type, value.size]:
@@ -751,23 +756,28 @@ fn acos(value: SIMD) -> SIMD[value.type, value.size]:
 from math import atan as _atan
 from math import atan2 as _atan2
 
-@always_inline
-fn atan(value: FloatLiteral) -> FloatLiteral:
-    """Computes arctangent of the input."""
-    return _atan(Float64(value)).value
+# @always_inline
+# fn atan(value: FloatLiteral) -> FloatLiteral:
+#     """Computes arctangent of the input."""
+#     return _atan(Float64(value)).value
 
 @always_inline
 fn atan(value: SIMD) -> SIMD[value.type, value.size]:
     """Computes arctangent of the input."""
     return _atan(value)
 
-@always_inline
-fn atan2(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
-    """Computes quadrant adjusted arctangent of the inputs."""
-    return atan2(Float64(a), Float64(b)).value
+# @always_inline
+# fn atan2(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
+#     """Computes quadrant adjusted arctangent of the inputs."""
+#     return atan2(Float64(a), Float64(b)).value
 
 @always_inline
-fn atan2(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
+fn atan2(a: Int, b: Int) -> Float64:
+    """Computes quadrant adjusted arctangent of the inputs."""
+    return _atan2[DType.float64, 1](a,b)
+
+@always_inline
+fn atan2[type: DType, size: Int](a: SIMD[type, size], b: SIMD[type, size]) -> SIMD[type, size]:
     """Computes quadrant adjusted arctangent of the inputs."""
     return _atan2(a,b)
 
@@ -778,10 +788,10 @@ fn atan2(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
 #
 from math import asinh as _asinh
 
-@always_inline
-fn asinh(value: FloatLiteral) -> FloatLiteral:
-    """Computes the hyperbolic arcsine of the input."""
-    return _asinh(Float64(value)).value
+# @always_inline
+# fn asinh(value: FloatLiteral) -> FloatLiteral:
+#     """Computes the hyperbolic arcsine of the input."""
+#     return _asinh(Float64(value)).value
 
 @always_inline
 fn asinh(value: SIMD) -> SIMD[value.type, value.size]:
@@ -795,10 +805,10 @@ fn asinh(value: SIMD) -> SIMD[value.type, value.size]:
 #
 from math import acosh as _acosh
 
-@always_inline
-fn acosh(value: FloatLiteral) -> FloatLiteral:
-    """Computes the hyperbolic arccosine of the input."""
-    return _acosh(Float64(value)).value
+# @always_inline
+# fn acosh(value: FloatLiteral) -> FloatLiteral:
+#     """Computes the hyperbolic arccosine of the input."""
+#     return _acosh(Float64(value)).value
 
 @always_inline
 fn acosh(value: SIMD) -> SIMD[value.type, value.size]:
@@ -812,10 +822,10 @@ fn acosh(value: SIMD) -> SIMD[value.type, value.size]:
 #
 from math import atanh as _atanh
 
-@always_inline
-fn atanh(value: FloatLiteral) -> FloatLiteral:
-    """Computes hyperbolic arctangent of the input."""
-    return _atanh(Float64(value)).value
+# @always_inline
+# fn atanh(value: FloatLiteral) -> FloatLiteral:
+#     """Computes hyperbolic arctangent of the input."""
+#     return _atanh(Float64(value)).value
 
 @always_inline
 fn atanh(value: SIMD) -> SIMD[value.type, value.size]:
@@ -871,7 +881,7 @@ fn sign(value: IntLiteral) -> IntLiteral:
     return compare(value, 0)
 
 @always_inline
-fn sign(value: FloatLiteral) -> IntLiteral:
+fn sign(value: FloatLiteral) -> FloatLiteral:
     """Returns the sign {+,0,-} of the input."""
     return compare(value, 0)
 
@@ -920,7 +930,7 @@ fn compare(a: IntLiteral, b: IntLiteral) -> IntLiteral:
     return 0
 
 @always_inline
-fn compare(a: FloatLiteral, b: FloatLiteral) -> IntLiteral:
+fn compare(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
     """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b."""
     if a > b: return 1
     elif a < b: return -1
@@ -948,6 +958,45 @@ fn compare(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
 # @always_inline
 # fn compare[type: DType, size: Int](a: SIMD[type, size], b: SIMD[type, size]) -> SIMD[type, size]:
 #     return (a > b).select(1,(a < b).select[type](-1, 0))
+
+
+
+
+#------( Unital Factor )------#
+#
+@always_inline
+fn ufac(square: FloatLiteral) -> FloatLiteral:
+    if square == sign(square): return 1
+    else: return sqrt(abs(square))
+
+
+
+
+#------( Contrast )------#
+#
+@always_inline
+fn contrast[square: FloatLiteral](value: FloatLiteral) -> FloatLiteral:
+    @parameter
+    if square == 0: return abs(value)
+    else: return value*value
+
+@always_inline
+fn contrast[square: FloatLiteral](value: IntLiteral) -> IntLiteral:
+    @parameter
+    if square == 0: return abs(value)
+    else: return value*value
+
+@always_inline
+fn contrast[square: FloatLiteral](value: Int) -> Int:
+    @parameter
+    if square == 0: return abs(value)
+    else: return value*value
+
+@always_inline
+fn contrast[square: FloatLiteral](value: SIMD) -> SIMD[value.type, value.size]:
+    @parameter
+    if square == 0: return abs(value)
+    else: return value*value
 
 
 
@@ -980,18 +1029,18 @@ fn min(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
     return _min(a, b)
 
 @always_inline
-fn min[square: Int](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[square]:
+fn min[square: FloatLiteral](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[square]:
     """Return the value which is closest to negative infinity."""
     return a if a < b else b
 
 @always_inline
-fn min[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
+fn min[type: DType, size: Int, square: FloatLiteral](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
     """Return the value which is closest to negative infinity."""
     var cond = (a < b) | (isnan_hybrid(a))
     return select(cond, a, b)
 
 @always_inline
-fn min[square: IntLiteral](a: HybridIntLiteral[square], b: HybridIntLiteral[square]) -> HybridIntLiteral[square]:
+fn min[square: FloatLiteral](a: HybridIntLiteral[square], b: HybridIntLiteral[square]) -> HybridIntLiteral[square]:
     if a < b: return a
     return b
 
@@ -1031,12 +1080,12 @@ fn max(a: SIMD, b: SIMD[a.type, a.size]) -> SIMD[a.type, a.size]:
     return _max(a, b)
 
 @always_inline
-fn max[square: Int](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[square]:
+fn max[square: FloatLiteral](a: HybridInt[square], b: HybridInt[square]) -> HybridInt[square]:
     """Return the value which is closest to positive infinity."""
     return a if a > b else b
 
 @always_inline
-fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
+fn max[type: DType, size: Int, square: FloatLiteral](a: HybridSIMD[type, size, square], b: HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square]:
     """Return the value which is closest to positive infinity."""
     var cond = (a > b) | (isnan_hybrid(a))
     return select(cond, a, b)
@@ -1047,7 +1096,7 @@ fn max[type: DType, size: Int, square: SIMD[type,1]](a: HybridSIMD[type, size, s
 #------ L1Norm ------#
 #
 @always_inline
-fn l1norm[type: DType, size: Int, square: Scalar[type]](value: HybridSIMD[type,size,square]) -> SIMD[type,size]:
+fn l1norm[type: DType, size: Int, square: FloatLiteral](value: HybridSIMD[type,size,square]) -> SIMD[type,size]:
     return abs(value.s) + abs(value.a)
 
 @always_inline
@@ -1057,6 +1106,8 @@ fn l1norm(value: MultiplexSIMD) -> SIMD[value.type,value.size]:
 
 
 
+# @always_inline
+# fn contrast()
 
 
 
