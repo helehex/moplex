@@ -1,15 +1,13 @@
-- better branch selection for lambert w
-- fill out remaining hybrid trig functions
-- fill out multiplex types
-- refactor testing
-- improve isnan(FloatLiteral)
-- rectify imaginary measure with hyperplex better, for pow and such
-- think about renaming `hybrid.s` to `hybrid.real`, and `hybrid.a` to `hybrid.anti`
-- think about renaming `hybrid.get_hybrid()` to `hybrid.get_lane()`
-- think more about which axis should take precedence
+- at some point, stop using the `__None=None` anti-pattern. more language features would make it easy.
+- fix converting literals to string (when possible)
+- add `HybridInt ** Int` overloads
+- add literal math functions
+- fill out multiplex
 - more usage examples, mandelbrot
-- remove redundant stdlib functions
-- HybridDTypePointer
+- better branch selection for lambert w and others
+- fill out remaining hybrid trig functions
+- rectify imaginary measure with hyperplex better, for pow and such
+- HybridVector
 - think about either:
     - use individual real and antiox types to distiguish things like `sqrt(Real(-1)) = i` vs. `sqrt(-1) = nan`,
     - keep going with distinguishing function names like hsqrt(-1), hexp(), etc..

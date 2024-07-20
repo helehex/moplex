@@ -1,16 +1,20 @@
-#------ Newtons Method ------#
-#
+# x--------------------------------------------------------------------------x #
+# | MIT License
+# | Copyright (c) 2024 Helehex
+# x--------------------------------------------------------------------------x #
 
-#--- SIMD
+
+# +------ SIMD Newtons Method ------+ #
 #
-fn newtons_method[type: DType, size: Int,
-    f: fn(SIMD[type,size])->SIMD[type,size],
-    df: fn(SIMD[type,size])->SIMD[type,size],
+fn newtons_method[
+    type: DType,
+    size: Int,
+    f: fn (SIMD[type, size]) -> SIMD[type, size],
+    df: fn (SIMD[type, size]) -> SIMD[type, size],
     iterations: Int = 8,
     tolerance: FloatLiteral = NAN,
-    epsilon: FloatLiteral = NAN
-    ](x0: SIMD[type,size], y_offset: SIMD[type,size] = 0) -> SIMD[type,size]:
-    
+    epsilon: FloatLiteral = NAN,
+](x0: SIMD[type, size], y_offset: SIMD[type, size] = 0) -> SIMD[type, size]:
     """
     Implements newtons method for solving trancendental equations.\n
     Converges on the roots of the input function `f` using it's derivative `fp`.\n
@@ -36,13 +40,16 @@ fn newtons_method[type: DType, size: Int,
         The converged value, or `nan` if no solution was found.
     """
 
-    constrained[type.is_floating_point(), "`type` parameter must be a floating-point"]()
-    alias _nan: SIMD[type,size] = nan[type]()
+    constrained[
+        type.is_floating_point(), "`type` parameter must be a floating-point"
+    ]()
+    alias _nan: SIMD[type, size] = nan[type]()
 
-    var completed: SIMD[DType.bool,size] = False
-    var x1: SIMD[type,size] = x0
+    var completed: SIMD[DType.bool, size] = False
+    var x1: SIMD[type, size] = x0
 
-    for i in range(iterations):
+    @parameter
+    for _ in range(iterations):
         var yp = df(x1)
 
         @parameter
@@ -50,8 +57,8 @@ fn newtons_method[type: DType, size: Int,
             var exploded = abs(yp) <= epsilon
             completed |= exploded
             x1 = select(exploded, _nan, x1)
-        
-        var x2 = x1 - (f(x1)-y_offset)/yp
+
+        var x2 = x1 - (f(x1) - y_offset) / yp
 
         @parameter
         if not isnan(tolerance):
@@ -59,25 +66,27 @@ fn newtons_method[type: DType, size: Int,
 
         @parameter
         if not isnan(tolerance) or not isnan(epsilon):
-            if completed.reduce_and(): return x1
+            if completed.reduce_and():
+                return x1
             x1 = select(completed, x1, x2)
-        else: x1 = x2
+        else:
+            x1 = x2
 
     @parameter
-    if not isnan(tolerance) or not isnan(epsilon): return select(completed, x1, _nan)
+    if not isnan(tolerance) or not isnan(epsilon):
+        return select(completed, x1, _nan)
     return x1
 
 
-#--- FloatLiteral
+# +------ Float Literal Newtons Method ------+ #
 #
 fn newtons_method[
-    f: fn(FloatLiteral)capturing->FloatLiteral,
-    df: fn(FloatLiteral)capturing->FloatLiteral,
+    f: fn (FloatLiteral) capturing -> FloatLiteral,
+    df: fn (FloatLiteral) capturing -> FloatLiteral,
     iterations: Int = 8,
     tolerance: FloatLiteral = NAN,
-    epsilon: FloatLiteral = NAN
-    ](x0: FloatLiteral, y_offset: FloatLiteral = 0) -> FloatLiteral:
-    
+    epsilon: FloatLiteral = NAN,
+](x0: FloatLiteral, y_offset: FloatLiteral = 0) -> FloatLiteral:
     """
     Implements newtons method for solving trancendental equations.\n
     Converges on the roots of the input function `f` using it's derivative `fp`.\n
@@ -100,36 +109,45 @@ fn newtons_method[
 
     var x1: FloatLiteral = x0
 
-    for i in range(iterations):
+    @parameter
+    for _ in range(iterations):
         var yp: FloatLiteral = df(x1)
 
         @parameter
         if not isnan(epsilon):
-            if abs(yp) <= epsilon: return NAN
-        
-        var x2: FloatLiteral = x1 - (f(x1)-y_offset)/yp
+            if abs(yp) <= epsilon:
+                return NAN
+
+        var x2: FloatLiteral = x1 - (f(x1) - y_offset) / yp
 
         @parameter
         if not isnan(tolerance):
-            if abs(x2 - x1) <= tolerance: return x2
+            if abs(x2 - x1) <= tolerance:
+                return x2
 
         x1 = x2
 
     @parameter
-    if not isnan(tolerance) or not isnan(epsilon): return NAN
+    if not isnan(tolerance) or not isnan(epsilon):
+        return NAN
     return x1
 
 
-#--- HybridSIMD
+# +------ HybridSIMD Newtons Method ------+ #
 #
-fn newtons_method[type: DType, size: Int, square: FloatLiteral,
-    f: fn(HybridSIMD[type,size,square])->HybridSIMD[type,size,square],
-    df: fn(HybridSIMD[type,size,square])->HybridSIMD[type,size,square],
+fn newtons_method[
+    type: DType,
+    size: Int,
+    square: FloatLiteral,
+    f: fn (HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square],
+    df: fn (HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square],
     iterations: Int = 8,
     tolerance: FloatLiteral = NAN,
-    epsilon: FloatLiteral = NAN
-    ](x0: HybridSIMD[type,size,square], y_offset: HybridSIMD[type,size,square] = 0) -> HybridSIMD[type,size,square]:
-    
+    epsilon: FloatLiteral = NAN,
+](
+    x0: HybridSIMD[type, size, square],
+    y_offset: HybridSIMD[type, size, square] = 0,
+) -> HybridSIMD[type, size, square]:
     """
     Implements newtons method for solving trancendental equations.\n
     Converges on the roots of the input function `f` using it's derivative `fp`.\n
@@ -156,13 +174,16 @@ fn newtons_method[type: DType, size: Int, square: FloatLiteral,
         The converged value, or `nan` if no solution was found.
     """
 
-    constrained[type.is_floating_point(), "`type` parameter must be a floating-point"]()
-    alias _nan: SIMD[type,size] = nan[type]()
+    constrained[
+        type.is_floating_point(), "`type` parameter must be a floating-point"
+    ]()
+    alias _nan: SIMD[type, size] = nan[type]()
 
-    var completed: SIMD[DType.bool,size] = False
-    var x1: HybridSIMD[type,size,square] = x0
+    var completed: SIMD[DType.bool, size] = False
+    var x1: HybridSIMD[type, size, square] = x0
 
-    for i in range(iterations):
+    @parameter
+    for _ in range(iterations):
         var yp = df(x1)
 
         @parameter
@@ -170,8 +191,8 @@ fn newtons_method[type: DType, size: Int, square: FloatLiteral,
             var exploded = l1norm(yp) <= epsilon
             completed |= exploded
             x1 = select(exploded, _nan, x1)
-        
-        var x2 = x1 - (f(x1)-y_offset)/yp
+
+        var x2 = x1 - (f(x1) - y_offset) / yp
 
         @parameter
         if not isnan(tolerance):
@@ -179,10 +200,13 @@ fn newtons_method[type: DType, size: Int, square: FloatLiteral,
 
         @parameter
         if not isnan(tolerance) or not isnan(epsilon):
-            if completed.reduce_and(): return x1
+            if completed.reduce_and():
+                return x1
             x1 = select(completed, x1, x2)
-        else: x1 = x2
+        else:
+            x1 = x2
 
     @parameter
-    if not isnan(tolerance) or not isnan(epsilon): return select(completed, x1, _nan)
+    if not isnan(tolerance) or not isnan(epsilon):
+        return select(completed, x1, _nan)
     return x1
