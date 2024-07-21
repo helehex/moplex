@@ -8,9 +8,9 @@
 #
 fn newtons_method[
     type: DType,
-    size: Int,
-    f: fn (SIMD[type, size]) -> SIMD[type, size],
-    df: fn (SIMD[type, size]) -> SIMD[type, size],
+    size: Int, //,
+    f: fn (value: SIMD) -> __type_of(value),
+    df: fn (value: SIMD) -> __type_of(value),
     iterations: Int = 8,
     tolerance: FloatLiteral = NAN,
     epsilon: FloatLiteral = NAN,
@@ -138,9 +138,9 @@ fn newtons_method[
 fn newtons_method[
     type: DType,
     size: Int,
-    square: FloatLiteral,
-    f: fn (HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square],
-    df: fn (HybridSIMD[type, size, square]) -> HybridSIMD[type, size, square],
+    square: FloatLiteral, //,
+    f: fn (value: HybridSIMD) -> __type_of(value),
+    df: fn (value: HybridSIMD) -> __type_of(value),
     iterations: Int = 8,
     tolerance: FloatLiteral = NAN,
     epsilon: FloatLiteral = NAN,

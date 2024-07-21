@@ -41,17 +41,16 @@ Example: `(1 + 1i) + (2 + 2o) = (3 + 1i + 2o)`
 
 to import and use a type, you can do:
 
-```py
-from moplex import moprint, Complex64, Dualplex64, Hyperplex64, HybridInt, i, o, x
+```mojo
+from moplex import *
+from moplex import i, o, x
 
-moprint(Complex64(-1,-2)**i)
-moprint(Dualplex64(1,1) + o)
-moprint(Hyperplex64(8,6) * x)
-moprint(Complex64(-1,-2) + Dualplex64(1,1) + Hyperplex64(8,6))
+print(Complex64(-1,-2) ** i)
+print(Dualplex64(1,1) + o)
+print(Hyperplex64(8,6) * x)
+print(Complex64(-1,-2) + Dualplex64(1,1) + Hyperplex64(8,6))
 ```
 
-You can also import just the antiox parts, but they dont sum together yet due to them being HybridIntLiteral type.
-
-(only MultiplexSIMD for now)
-
+You can also import just the antiox parts, but this is not ideal as some people like using single letter variables for other things.  
+Also, they dont sum together yet due to them being HybridIntLiteral type. (only MultiplexSIMD for now)  
 This may change with future updates.

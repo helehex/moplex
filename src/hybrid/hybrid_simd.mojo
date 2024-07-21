@@ -207,12 +207,12 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](StringableCollec
     @always_inline
     fn is_zero(self) -> Bool:
         """Returns true when both parts of this hybrid number are zero."""
-        return self.re == 0 and self.im == 0
+        return (self.re == 0 and self.im == 0).__bool__()
 
     @always_inline
     fn is_null(self) -> Bool:
         """Returns true when this hybrid number has a measure of zero."""
-        return contrast(self) == 0
+        return (contrast(self) == 0).__bool__()
 
     @always_inline
     fn __hybrid_int__(self) -> HybridInt[square]:
@@ -688,7 +688,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](StringableCollec
     #     return abs(self.re)
 
     @always_inline
-    fn argument[branch: Int = 0](self) -> Self.Coef:
+    fn argument[branch: IntLiteral = 0](self) -> Self.Coef:
         """Gets the argument of this hybrid number."""
         @parameter
         if square == -1:
@@ -828,7 +828,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](StringableCollec
                 return exp(other*log(self))
 
     @always_inline # Hybrid ** Hybrid
-    fn __pow__[__:None=None, branch: Int = 0](self, other: Self) -> Self:
+    fn __pow__[__:None=None, branch: IntLiteral = 0](self, other: Self) -> Self:
         if other == 1:
             return self
         elif other == 2:
@@ -840,7 +840,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](StringableCollec
             if square == 0:
                 return pow(self.re, other.re-1) * HybridSIMD[type,size,square](self.re, other.im*self.re*log(self.re) + self.im*other.re)
             else:
-                return exp(other*log[branch = branch](self))
+                return exp(other*log[branch](self))
     
     
     # +------( Reverse Arithmetic )------+ #

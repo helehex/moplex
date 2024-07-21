@@ -135,17 +135,17 @@ struct MultiplexSIMD[type: DType, size: Int](StringableCollectionElement, Format
     @always_inline
     fn __bool__(self) -> Bool:
         """Returns true when there are any non-zero parts."""
-        return self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0
+        return (self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0).__bool__()
 
     @always_inline
     fn is_zero(self) -> Bool:
         """Returns true when both parts of this multiplex number are zero."""
-        return self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0
+        return (self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0).__bool__()
 
     @always_inline
     fn is_null(self) -> Bool:
         """Returns true when this multiplex number has a measure of zero."""
-        return self.measure() == 0
+        return (self.measure() == 0).__bool__()
 
     fn to_tuple(self) -> (Self.Coef, Self.Coef, Self.Coef, Self.Coef):
         """Creates a non-algebraic StaticTuple from the multiplex parts."""

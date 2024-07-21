@@ -52,7 +52,7 @@ fn random_sign[
     # define integral type to return either {1, -1, i, -i}
 
     var theta = rand[type, size]() * tau
-    var result = expa[type, size, square](theta)
+    var result = expa[square](theta)
 
     @parameter
     if square < 0:
