@@ -27,7 +27,7 @@ Hyperplex numbers, written like `1+2x`, have an antiox that squares to one -> `x
 
 
 
-You can in fact make a number which has an antiox that squares to any real by parameterizing the `Hybrid` type.
+You can even make a number with an antiox that squares to any real by parameterizing the `Hybrid` type.
 
 This looks like: `HybridInt[-2](0,1)`, which squares to `-2`
 

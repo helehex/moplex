@@ -40,7 +40,7 @@ fn random_sign[type: DType, size: Int]() -> SIMD[type, size]:
     @parameter
     if type.is_unsigned():
         return 1
-    return select[type, size](rand[DType.index, size]() < 0, -1, 1)
+    return simd_select[type](rand[DType.index, size]() < 0, -1, 1)
 
 
 fn random_sign[

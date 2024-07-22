@@ -16,7 +16,7 @@ from .solver import newtons_method
 # +--------------------------------------------------------------------------+ #
 #
 @always_inline("nodebug") # Scalar _ Scalar
-fn select[type: DType, size: Int](cond: SIMD[DType.bool,size], true_case: SIMD[type,size], false_case: SIMD[type,size]) -> SIMD[type,size]:
+fn simd_select[type: DType, size: Int](cond: SIMD[DType.bool,size], true_case: SIMD[type,size], false_case: SIMD[type,size]) -> SIMD[type,size]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -35,7 +35,7 @@ fn select[type: DType, size: Int](cond: SIMD[DType.bool,size], true_case: SIMD[t
     return cond.select(true_case, false_case)
 
 @always_inline("nodebug") # Scalar _ Hybrid
-fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: SIMD[type,size], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn simd_select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: SIMD[type,size], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -52,10 +52,10 @@ fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,si
     Returns:
         A new vector of the form [true_case[i] if cond[i] else false_case[i] in enumerate(self)].
     """
-    return HybridSIMD[type,size,square](select(cond, true_case, false_case.re), select(cond, 0, false_case.im))
+    return HybridSIMD[type,size,square](simd_select(cond, true_case, false_case.re), simd_select(cond, 0, false_case.im))
 
 @always_inline("nodebug") # Hybrid _ Scalar
-fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: SIMD[type,size]) -> HybridSIMD[type,size,square]:
+fn simd_select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: SIMD[type,size]) -> HybridSIMD[type,size,square]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -72,10 +72,10 @@ fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,si
     Returns:
         A new vector of the form [true_case[i] if cond[i] else false_case[i] in enumerate(self)].
     """
-    return HybridSIMD[type,size,square](select(cond, true_case.re, false_case), select(cond, true_case.im, 0))
+    return HybridSIMD[type,size,square](simd_select(cond, true_case.re, false_case), simd_select(cond, true_case.im, 0))
 
 @always_inline("nodebug") # Hybrid _ Hybrid
-fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
+fn simd_select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,size], true_case: HybridSIMD[type,size,square], false_case: HybridSIMD[type,size,square]) -> HybridSIMD[type,size,square]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -92,7 +92,7 @@ fn select[type: DType, size: Int, square: FloatLiteral](cond: SIMD[DType.bool,si
     Returns:
         A new vector of the form [true_case[i] if cond[i] else false_case[i] in enumerate(self)].
     """
-    return HybridSIMD[type,size,square](select(cond, true_case.re, false_case.re), select(cond, true_case.im, false_case.im))
+    return HybridSIMD[type,size,square](simd_select(cond, true_case.re, false_case.re), simd_select(cond, true_case.im, false_case.im))
 
 
 # +--------------------------------------------------------------------------+ #
@@ -115,15 +115,15 @@ fn sqrt[type: DType, size: Int, //, value: SIMD[type, size]]() -> SIMD[type, siz
     """Returns the square root of the input simd vector."""
     @parameter
     if type.is_floating_point():
-        return select(value == 0, 0, 1/rsqrt[value]())
+        return simd_select(value == 0, 0, 1/rsqrt[value]())
     var negative = (value <= 0)
     var finished = (negative) | (value == 1)
-    var a = select(negative, -1, (value + 1)/2)
+    var a = simd_select(negative, -1, (value + 1)/2)
     while not finished:
         var b = (a + value/a) / 2
         finished |= b >= a
-        a = select(finished, a, b)
-    return select(negative, 0, a)
+        a = simd_select(finished, a, b)
+    return simd_select(negative, 0, a)
 
 @always_inline("nodebug")
 fn sqrt(value: FloatLiteral) -> FloatLiteral:
@@ -175,11 +175,11 @@ fn rsqrt[type: DType, size: Int, //, value: SIMD[type, size]]() -> SIMD[type, si
         return 0
     var negative = value <= 0
     var finished = negative | (value == 1)
-    var a = select[type,size](negative, nan[type](), 2/(value + 1))
+    var a = simd_select[type](negative, nan[type](), 2/(value + 1))
     while not finished:
         var b = (a/2) * (3 - value*a*a)
         finished |= b <= a
-        a = select(finished, a, b)
+        a = simd_select(finished, a, b)
     return a
 
 @always_inline("nodebug")
