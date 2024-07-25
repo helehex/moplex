@@ -33,9 +33,6 @@ fn coin() -> Bool:
 
 # +------( Random Sign )------+ #
 #
-from ..math import select
-
-
 fn random_sign[type: DType, size: Int]() -> SIMD[type, size]:
     @parameter
     if type.is_unsigned():
