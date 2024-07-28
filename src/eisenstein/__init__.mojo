@@ -4,13 +4,9 @@
 # x--------------------------------------------------------------------------x #
 """Eisenstein Integers."""
 
-from .wovo import LitIntE_wovo
-from .wovo import ESIMD_wovo
-from .wovo import IntE_wovo
-
-from .rewo import LitIntE_rewo
-from .rewo import ESIMD_rewo
-from .rewo import IntE_rewo
+from .wovo import EisIntLiteral_wovo as EisIntLiteral
+from .wovo import EisSIMD_wovo as EisSIMD
+from .wovo import EisInt_wovo as EisInt
 
 
 #

@@ -4,7 +4,7 @@
 # x--------------------------------------------------------------------------x #
 """Eisenstein `(wo (+) vo)`"""
 
-from .eisenstein_int_literal import LitIntE_wovo
-from .eisenstein_simd import ESIMD_wovo
+from .eisenstein_int_literal import EisIntLiteral_wovo
+from .eisenstein_simd import EisSIMD_wovo
 
-alias IntE_wovo = ESIMD_wovo[DType.index,1]
+alias EisInt_wovo = EisSIMD_wovo[DType.index, 1]

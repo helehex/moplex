@@ -8,10 +8,9 @@
 # | Eisenstein Integer Literal (wo (+) vo)
 # +--------------------------------------------------------------------------+ #
 #
-@value
-@nonmaterializable(IntE_wovo)
+@nonmaterializable(EisInt_wovo)
 @register_passable("trivial")
-struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
+struct EisIntLiteral_wovo(StringableCollectionElement, EqualityComparable):
 
     # +------[ Alias ]------+ #
     #
@@ -27,12 +26,19 @@ struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
     # +------( Initialize )------+ #
     #
     @always_inline("nodebug")
-    fn __init__(re: Self.Coef) -> Self:
-        return Self{wo: -re, vo: -re}
+    fn __init__(inout self, re: Self.Coef = 0):
+        self.wo = -re
+        self.vo = -re
 
     @always_inline("nodebug")
-    fn __init__(wo: Self.Coef, po: Self.Coef, vo: Self.Coef) -> Self:
-        return Self{wo: wo-po, vo: vo-po}
+    fn __init__(inout self, wo: Self.Coef, vo: Self.Coef):
+        self.wo = wo
+        self.vo = vo
+
+    @always_inline("nodebug")
+    fn __init__(inout self, wo: Self.Coef, po: Self.Coef, vo: Self.Coef):
+        self.wo = wo-po
+        self.vo = vo-po
     
 
     # +------( Arithmetic )------+ #
@@ -41,11 +47,13 @@ struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
     fn __add__(a: Self, b: Self) -> Self:
         return Self(a.wo + b.wo, a.vo + b.vo)
     
-    @always_inline("nodebug") # wo_add acts more like subtract than add
+    @always_inline("nodebug")
+    """wo_add acts more like subtract than add."""
     fn wo_add(a: Self, b: Self) -> Self:
         return Self(a.wo - b.vo, a.vo + b.wo - b.vo)
     
-    @always_inline("nodebug") # vo_add acts more like subtract than add
+    @always_inline("nodebug")
+    """vo_add acts more like subtract than add."""
     fn vo_add(a: Self, b: Self) -> Self:
         return Self(a.wo + b.vo - b.wo, a.vo - b.wo)
     
@@ -53,11 +61,13 @@ struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
     fn __sub__(a: Self, b: Self) -> Self:
         return Self(a.wo - b.wo, a.vo - b.vo)
     
-    @always_inline("nodebug") # wo_sub acts more like add than subtract
+    @always_inline("nodebug")
+    """wo_sub acts more like add than subtract."""
     fn wo_sub(a: Self, b: Self) -> Self:
         return Self(a.wo + b.vo, a.vo - b.wo + b.vo)
     
-    @always_inline("nodebug") # vo_sub acts more like add than subtract
+    @always_inline("nodebug")
+    """vo_sub acts more like add than subtract."""
     fn vo_sub(a: Self, b: Self) -> Self:
         return Self(a.wo - b.vo + b.wo, a.vo + b.wo)
     
@@ -83,26 +93,32 @@ struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
     #
     @always_inline("nodebug")
     fn coef_po(self) -> Self.Coef:
+        """Gets the positive component, or 0 if there is none."""
         return _max(_max(0, -self.wo), _max(0, -self.vo))
     
     @always_inline("nodebug")
     fn coef_powo(self) -> Self.Coef:
+        """Gets the upper left component, or 0 if there is none."""
         return _max(0, self.wo + _max(0, -self.vo))
     
     @always_inline("nodebug")
     fn coef_povo(self) -> Self.Coef:
+        """Gets the bottom left component, or 0 if there is none."""
         return _max(0, self.vo + _max(0, -self.wo))
     
     @always_inline("nodebug")
     fn coef_ne(self) -> Self.Coef:
+        """Gets the negative component, or 0 if there is none."""
         return _max(_max(0, self.wo), _max(0, self.vo))
     
     @always_inline("nodebug")
     fn coef_newo(self) -> Self.Coef:
+        """Gets the upper right component, or 0 if there is none."""
         return _max(0, -self.wo + _max(0, self.vo))
     
     @always_inline("nodebug")
     fn coef_nevo(self) -> Self.Coef:
+        """Gets the bottom right component, or 0 if there is none."""
         return _max(0, -self.vo + _max(0, self.wo))
 
 
@@ -110,11 +126,11 @@ struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
     #
     @always_inline("nodebug")
     fn __eq__(self, other: Self) -> Bool:
-        return self.wo == other.wo and self.vo == other.vo
+        return (self.wo == other.wo) & (self.vo == other.vo)
 
     @always_inline("nodebug")
     fn __ne__(self, other: Self) -> Bool:
-        return self.wo != other.wo or self.vo != other.vo
+        return (self.wo != other.wo) | (self.vo != other.vo)
 
 
     # +------( Unary )------+ #
@@ -130,38 +146,14 @@ struct LitIntE_wovo(StringableCollectionElement, EqualityComparable):
 
     # +------( Format )------+ #
     #
-    @always_inline("nodebug")
+    @no_inline
     fn __str__(self) -> String:
-        return self.str_()
+        return EisInt_wovo(self).__str__()
 
-    @always_inline("nodebug")
-    fn str_wovo(self) -> String:
-        return String(self.wo) + "wo + " + String(self.vo) + "vo"
-    
-    @always_inline("nodebug")
-    fn str_po(self) -> String:
-        return "(" + String(self.coef_powo()) + "<+" + String(self.coef_po()) + "+>" + String(self.coef_povo()) + ")"
+    @no_inline
+    fn format_to(self, inout writer: Formatter):
+        EisInt_wovo(self).format_to(writer)
 
-    @always_inline("nodebug")
-    fn str_ne(self) -> String:
-        return "(" + String(self.coef_newo()) + "->" + String(self.coef_ne()) + "<-" + String(self.coef_nevo()) + ")"
-
-    @always_inline("nodebug")
-    fn str_(self) -> String:
-        return self.str_po()
-
-    @always_inline("nodebug")
-    fn print_wovo(self):
-        print(self.str_wovo())
-
-    @always_inline("nodebug")
-    fn print_po(self):
-        print(self.str_po())
-
-    @always_inline("nodebug")
-    fn print_ne(self):
-        print(self.str_ne())
-    
-    @always_inline("nodebug")
-    fn print_(self):
-        self.print_po()
+    @no_inline
+    fn format_to[fmt: StringLiteral](self, inout writer: Formatter):
+        EisInt_wovo(self).format_to[fmt](writer)

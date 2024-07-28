@@ -257,9 +257,10 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](StringableCollec
             writer.write(self.re, " + ", self.im, symbol[square]())
         else:
             @parameter
-            for index in range(size - 1):
-                writer.write(self.getlane(index), "\n")
-            writer.write(self.getlane(size - 1))
+            for lane in range(size - 1):
+                self.getlane(lane).format_to(writer)
+                writer.write("\n")
+            self.getlane(size - 1).format_to(writer)
 
     # +------( Subscript )------+ #
     #

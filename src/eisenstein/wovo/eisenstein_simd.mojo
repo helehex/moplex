@@ -8,15 +8,14 @@
 # | Eisenstein SIMD (wo (+) vo)
 # +--------------------------------------------------------------------------+ #
 #
-@value
 @register_passable("trivial")
-struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityComparable):
+struct EisSIMD_wovo[type: DType = DType.index, size: Int = 1](StringableCollectionElement, EqualityComparable):
 
     # +------[ Alias ]------+ #
     #
-    alias Lit = LitIntE_wovo
-    alias Coef = SIMD[dt,sw]
-    alias Unit = ESIMD_wovo[dt,1]
+    alias Lit = EisIntLiteral_wovo
+    alias Coef = SIMD[type, size]
+    alias Unit = EisSIMD_wovo[type, 1]
 
 
     # +------< Data >------+ #
@@ -28,20 +27,24 @@ struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityCompa
     # +------( Initialize )------+ #
     #
     @always_inline("nodebug")
-    fn __init__(lit: Self.Lit) -> Self:
-        return Self{wo: lit.wo, vo: lit.vo}
+    fn __init__(inout self, re: Self.Coef = 0):
+        self.wo = -re
+        self.vo = -re
     
     @always_inline("nodebug")
-    fn __init__(re: Self.Coef) -> Self:
-        return Self{wo: -re, vo: -re}
-    
-    @always_inline("nodebug")
-    fn __init__(wo: Self.Coef, vo: Self.Coef) -> Self:
-        return Self{wo: wo, vo: vo}
+    fn __init__(inout self, wo: Self.Coef, vo: Self.Coef):
+        self.wo = wo
+        self.vo = vo
 
     @always_inline("nodebug")
-    fn __init__(wo: Self.Coef, po: Self.Coef, vo: Self.Coef) -> Self:
-        return Self{wo: wo-po, vo: vo-po}
+    fn __init__(inout self, wo: Self.Coef, po: Self.Coef, vo: Self.Coef):
+        self.wo = wo-po
+        self.vo = vo-po
+
+    @always_inline("nodebug")
+    fn __init__(inout self, lit: Self.Lit):
+        self.wo = lit.wo
+        self.vo = lit.vo
     
 
     # +------( Arithmetic )------+ #
@@ -50,11 +53,13 @@ struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityCompa
     fn __add__(a: Self, b: Self) -> Self:
         return Self(a.wo + b.wo, a.vo + b.vo)
     
-    @always_inline("nodebug") # wo_add acts more like subtract than add
+    @always_inline("nodebug")
+    """wo_add acts more like subtract than add."""
     fn wo_add(a: Self, b: Self) -> Self:
         return Self(a.wo - b.vo, a.vo + b.wo - b.vo)
     
-    @always_inline("nodebug") # vo_add acts more like subtract than add
+    @always_inline("nodebug")
+    """vo_add acts more like subtract than add."""
     fn vo_add(a: Self, b: Self) -> Self:
         return Self(a.wo + b.vo - b.wo, a.vo - b.wo)
     
@@ -62,11 +67,13 @@ struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityCompa
     fn __sub__(a: Self, b: Self) -> Self:
         return Self(a.wo - b.wo, a.vo - b.vo)
     
-    @always_inline("nodebug") # wo_sub acts more like add than subtract
+    @always_inline("nodebug")
+    """wo_sub acts more like add than subtract."""
     fn wo_sub(a: Self, b: Self) -> Self:
         return Self(a.wo + b.vo, a.vo - b.wo + b.vo)
     
-    @always_inline("nodebug") # vo_sub acts more like add than subtract
+    @always_inline("nodebug")
+    """vo_sub acts more like add than subtract."""
     fn vo_sub(a: Self, b: Self) -> Self:
         return Self(a.wo - b.vo + b.wo, a.vo + b.wo)
     
@@ -99,43 +106,57 @@ struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityCompa
     # +------( Subscript )------+ #
     #
     @always_inline("nodebug")
-    fn __getitem__(self, index: Int) -> Self.Unit:
-        return Self.Unit(self.wo[index], self.vo[index])
+    fn __getitem__(self, idx: Int) -> Self.Unit:
+        return self.get_lane(idx)
 
     @always_inline("nodebug")
-    fn __setitem__(inout self, index: Int, item: Self.Unit):
-        self.wo[index] = item.wo
-        self.vo[index] = item.vo
+    fn __setitem__(inout self, idx: Int, item: Self.Unit):
+        self.set_lane(idx, item)
+
+    @always_inline("nodebug")
+    fn get_lane(self, idx: Int) -> Self.Unit:
+        return Self.Unit(self.wo[idx], self.vo[idx])
+
+    @always_inline("nodebug")
+    fn set_lane(inout self, idx: Int, item: Self.Unit):
+        self.wo[idx] = item.wo
+        self.vo[idx] = item.vo
 
     @always_inline("nodebug")
     fn coef_po(self) -> Self.Coef:
+        """Gets the positive component, or 0 if there is none."""
         return max(max(0, -self.wo), max(0, -self.vo))
     
     @always_inline("nodebug")
     fn coef_powo(self) -> Self.Coef:
+        """Gets the upper left component, or 0 if there is none."""
         return max(0, self.wo + max(0, -self.vo))
     
     @always_inline("nodebug")
     fn coef_povo(self) -> Self.Coef:
+        """Gets the bottom left component, or 0 if there is none."""
         return max(0, self.vo + max(0, -self.wo))
     
     @always_inline("nodebug")
     fn coef_ne(self) -> Self.Coef:
+        """Gets the negative component, or 0 if there is none."""
         return max(max(0, self.wo), max(0, self.vo))
     
     @always_inline("nodebug")
     fn coef_newo(self) -> Self.Coef:
+        """Gets the upper right component, or 0 if there is none."""
         return max(0, -self.wo + max(0, self.vo))
     
     @always_inline("nodebug")
     fn coef_nevo(self) -> Self.Coef:
+        """Gets the bottom right component, or 0 if there is none."""
         return max(0, -self.vo + max(0, self.wo))
     
 
     # +------( Comparison )------+ #
     #
     @always_inline("nodebug")
-    fn __eq__(self, other: Self) -> SIMD[DType.bool, sw]:
+    fn __eq__(self, other: Self) -> SIMD[DType.bool, size]:
         return (self.wo == other.wo) & (self.vo == other.vo)
 
     @always_inline("nodebug")
@@ -143,8 +164,8 @@ struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityCompa
         return all(self.__eq__(other))
 
     @always_inline("nodebug")
-    fn __ne__(self, other: Self) -> SIMD[DType.bool, sw]:
-        return (self.wo != other.wo) & (self.vo != other.vo)
+    fn __ne__(self, other: Self) -> SIMD[DType.bool, size]:
+        return (self.wo != other.wo) | (self.vo != other.vo)
 
     @always_inline("nodebug")
     fn __ne__[__:None=None](self, other: Self) -> Bool:
@@ -164,59 +185,33 @@ struct ESIMD_wovo[dt: DType, sw: Int](StringableCollectionElement, EqualityCompa
 
     # +------( Format )------+ #
     #
-    @always_inline("nodebug")
+    @no_inline
     fn __str__(self) -> String:
-        return self.str_()
+        """Formats the hybrid as a String."""
+        return String.format_sequence(self)
 
-    @always_inline("nodebug")
-    fn str_wovo[seperator: String = "\n"](self) -> String:
-        @parameter
-        if sw == 1:
-            return str(self.wo) + "wo + " + str(self.vo) + "vo"
-        var result: String = ""
-        @parameter
-        for i in range(sw - 1):
-            result += self[i].str_wovo() + seperator
-        return result + self[sw - 1].str_wovo()
-            
-    @always_inline("nodebug")
-    fn str_po[seperator: String = "\n"](self) -> String:
-        @parameter
-        if sw == 1:
-            return "(" + str(self.coef_powo()) + "<+" + str(self.coef_po()) + "+>" + str(self.coef_povo()) + ")"
-        var result: String = ""
-        @parameter
-        for i in range(sw - 1):
-            result += self[i].str_po() + seperator
-        return result + self[sw - 1].str_po()
-    
-    @always_inline("nodebug")
-    fn str_ne[seperator: String = "\n"](self) -> String:
-        @parameter
-        if sw == 1:
-            return "(" + str(self.coef_newo()) + "->" + str(self.coef_ne()) + "<-" + str(self.coef_nevo()) + ")"
-        var result: String = ""
-        @parameter
-        for i in range(sw - 1):
-            result += self[i].str_ne() + seperator
-        return result + self[sw - 1].str_ne()
+    @no_inline
+    fn format_to(self, inout writer: Formatter):
+        self.format_to["po", "\n"](writer)
 
-    @always_inline("nodebug")
-    fn str_[seperator: String = " "](self) -> String:
-        return self.str_po[seperator]()
-    
-    @always_inline("nodebug")
-    fn print_wovo[seperator: String = "\n"](self):
-        print(self.str_wovo[seperator]())
-
-    @always_inline("nodebug")
-    fn print_po[seperator: String = "\n"](self):
-        print(self.str_po[seperator]())
-    
-    @always_inline("nodebug")
-    fn print_ne[seperator: String = "\n"](self):
-        print(self.str_ne[seperator]())
-
-    @always_inline("nodebug")
-    fn print_[seperator: String = " "](self):
-        self.print_po[seperator]()
+    @no_inline
+    fn format_to[fmt: StringLiteral, sep: StringLiteral = "\n"](self, inout writer: Formatter):
+        @parameter
+        if size == 1:
+            @parameter
+            if fmt == "rewo":
+                writer.write(-(self.wo + self.vo), " + ", self.wo, "w")
+            if fmt == "revo":
+                writer.write(-(self.wo + self.vo), " + ", self.vo, "v")
+            elif fmt == "wovo":
+                writer.write(self.wo, "w + ", self.vo, "v")
+            elif fmt == "po":
+                writer.write("(", self.coef_powo(), "<+", self.coef_po(), "+>", self.coef_povo(), ")")
+            elif fmt == "ne":
+                writer.write("(", self.coef_newo(), "->", self.coef_ne(), "<-", self.coef_nevo(), ")")
+        else:
+            @parameter
+            for lane in range(size - 1):
+                self[lane].format_to[fmt, sep](writer)
+                writer.write(sep)
+            self[size - 1].format_to[fmt, sep](writer)
