@@ -1,7 +1,7 @@
-# x--------------------------------------------------------------------------x #
+# x----------------------------------------------------------------------------------------------x #
 # | MIT License
 # | Copyright (c) 2024 Helehex
-# x--------------------------------------------------------------------------x #
+# x----------------------------------------------------------------------------------------------x #
 """Numerical Limits."""
 
 from math.math import nan as _nan
@@ -12,9 +12,7 @@ alias INF: FloatLiteral = __mlir_attr[`#kgen.float_literal<inf>`]
 
 
 @always_inline
-fn nan[
-    type: DType, size: Int = 1, fail: Optional[SIMD[type, 1]] = None
-]() -> SIMD[type, size]:
+fn nan[type: DType, size: Int = 1, fail: Optional[SIMD[type, 1]] = None]() -> SIMD[type, size]:
     @parameter
     if type.is_floating_point():
         return _nan[type]()
@@ -42,9 +40,7 @@ fn nan_multiplex[
 ]() -> MultiplexSIMD[type, size]:
     @parameter
     if type.is_floating_point():
-        return MultiplexSIMD[type, 1](
-            _nan[type](), _nan[type](), _nan[type](), _nan[type]()
-        )
+        return MultiplexSIMD[type, 1](_nan[type](), _nan[type](), _nan[type](), _nan[type]())
     constrained[fail.__bool__(), "cannot get nan of integral dtype"]()
     return fail.value()
 

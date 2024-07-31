@@ -1,7 +1,7 @@
-# x--------------------------------------------------------------------------x #
+# x----------------------------------------------------------------------------------------------x #
 # | MIT License
 # | Copyright (c) 2024 Helehex
-# x--------------------------------------------------------------------------x #
+# x----------------------------------------------------------------------------------------------x #
 """Implements a hybrid floating point literal."""
 
 
@@ -10,9 +10,9 @@ alias DualplexFloatLiteral = HybridFloatLiteral[0]
 alias HyperplexFloatLiteral = HybridFloatLiteral[1]
 
 
-# +--------------------------------------------------------------------------+ #
+# +----------------------------------------------------------------------------------------------+ #
 # | Hybrid Float Literal
-# +--------------------------------------------------------------------------+ #
+# +----------------------------------------------------------------------------------------------+ #
 #
 @register_passable("trivial")
 struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, EqualityComparable):
@@ -22,7 +22,7 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     Parameterized on the antiox squared.
 
         square = antiox*antiox
-    
+
     Parameters:
         square: The value of the antiox unit squared.
     """
@@ -34,10 +34,9 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
 
     alias unital_square = sign(square)
     """The normalized square."""
-    
+
     alias unital_factor = ufac(square)
     """The unitization factor."""
-
 
     # +------< Data >------+ #
     #
@@ -46,28 +45,26 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
 
     var im: Self.Coef
     """The anti part."""
-    
-    
+
     # +------( Initialize )------+ #
     #
-    @always_inline # Coefficients
+    @always_inline  # Coefficients
     fn __init__(inout self, re: Self.Coef = 0, im: Self.Coef = 0):
         """Initializes a HybridFloatLiteral from coefficients."""
         self.re = re
         self.im = im
 
-    @always_inline # Scalar
+    @always_inline  # Scalar
     fn __init__(inout self, re: IntLiteral):
         """Initializes a HybridFloatLiteral from an IntLiteral."""
         self.re = re
         self.im = 0
 
-    @always_inline # Hybrid
+    @always_inline  # Hybrid
     fn __init__(inout self, h: HybridIntLiteral[square]):
         """Initializes a HybridFloatLiteral from a HybridIntLiteral."""
         self.re = h.re
         self.im = h.im
-
 
     # +------( Cast )------+ #
     #
@@ -93,7 +90,8 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
 
     @always_inline
     fn __hybrid_int_literal__(self) -> HybridIntLiteral[square]:
-        """Casts the value to a HybridIntLiteral. The fractional components are truncated towards zero."""
+        """Casts the value to a HybridIntLiteral. The fractional components are truncated towards zero.
+        """
         return HybridIntLiteral[square](self.re.__int_literal__(), self.im.__int_literal__())
 
     @always_inline
@@ -103,24 +101,26 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
 
     @always_inline
     fn unitize(self) -> HybridFloatLiteral[Self.unital_square]:
-        """Unitize the HybridFloatLiteral, this normalizes the square and adjusts the antiox coefficient."""
+        """Unitize the HybridFloatLiteral, this normalizes the square and adjusts the antiox coefficient.
+        """
         return HybridFloatLiteral[Self.unital_square](self.re, self.im * Self.unital_factor)
-    
+
     @always_inline
     fn unitize[target_square: FloatLiteral](self) -> HybridFloatLiteral[target_square]:
         """Unitize the HybridFloatLiteral. Sets the square and adjusts the antiox coefficient."""
-        constrained[sign(square) == sign(target_square), "cannot unitize: the squares signs must match"]()
+        constrained[
+            sign(square) == sign(target_square),
+            "cannot unitize: the squares signs must match",
+        ]()
         alias factor = ufac(square) / ufac(target_square)
         return HybridFloatLiteral[target_square](self.re, self.im * factor)
 
-    
     # +------( Format )------+ #
     #
     @always_inline
     fn __str__(self) -> String:
         """Formats the hybrid as a String."""
         return str(Hybrid64[square](self))
-
 
     # +------( Subscript )------+ #
     #
@@ -138,10 +138,12 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
         Returns:
             The coefficient at the given index.
         """
-        if idx == 0: return self.re
-        if idx == 1: return self.im
+        if idx == 0:
+            return self.re
+        if idx == 1:
+            return self.im
         return 0
-    
+
     @always_inline
     fn setcoef(inout self, idx: Int, coef: Self.Coef):
         """
@@ -154,19 +156,26 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
             idx: The index of the coefficient.
             coef: The coefficient to insert at the given index.
         """
-        if idx == 0: self.re = coef
-        elif idx == 1: self.im = coef
+        if idx == 0:
+            self.re = coef
+        elif idx == 1:
+            self.im = coef
 
     @always_inline
     fn get_antiox[_square: FloatLiteral](self) -> Self.Coef:
-        constrained[sign(square) == sign(_square), "cannot get antiox. the sign of squares must match"]()
+        constrained[
+            sign(square) == sign(_square),
+            "cannot get antiox. the sign of squares must match",
+        ]()
         return self.im * (Self.unital_factor / ufac(_square))
 
     @always_inline
     fn set_antiox[_square: FloatLiteral](inout self, antiox: Self.Coef):
-        constrained[sign(square) == sign(_square), "cannot set antiox. the sign of squares must match"]()
+        constrained[
+            sign(square) == sign(_square),
+            "cannot set antiox. the sign of squares must match",
+        ]()
         self.im = (antiox * (ufac(_square) / Self.unital_factor)).__int_literal__()
-
 
     # +------( Min / Max )------+ #
     #
@@ -180,27 +189,30 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
         """Return the value which is closest to positive infinity."""
         return self if (self > other) else other
 
-
     # +------( Comparison )------+ #
     #
     @always_inline
     fn __lt__(self, other: Self) -> Bool:
-        """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
+        """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's.
+        """
         return contrast(self) < contrast(other)
 
     @always_inline
     fn __lt__(self, other: Self.Coef) -> Bool:
-        """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's."""
+        """Defines the `<` less-than operator. Returns true if the hybrids measure is less than the other's.
+        """
         return contrast(self) < contrast[square](other)
 
     @always_inline
     fn __le__(self, other: Self) -> Bool:
-        """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
+        """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's.
+        """
         return contrast(self) <= contrast(other)
 
     @always_inline
     fn __le__(self, other: Self.Coef) -> Bool:
-        """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's."""
+        """Defines the `<=` less-than-or-equal operator. Returns true if the hybrids measure is less than or equal to the other's.
+        """
         return contrast(self) <= contrast[square](other)
 
     @always_inline
@@ -212,37 +224,42 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     fn __eq__(self, other: Self.Coef) -> Bool:
         """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.re == other and self.im == 0
-    
+
     @always_inline
     fn __ne__(self, other: Self) -> Bool:
-        """Defines the `!=` inequality operator. Returns true if the hybrid numbers are not equal."""
+        """Defines the `!=` inequality operator. Returns true if the hybrid numbers are not equal.
+        """
         return self.re != other.re or self.im != other.im
 
     @always_inline
     fn __ne__(self, other: Self.Coef) -> Bool:
-        """Defines the `!=` inequality operator. Returns true if the hybrid numbers are not equal."""
+        """Defines the `!=` inequality operator. Returns true if the hybrid numbers are not equal.
+        """
         return self.re != other or self.im != 0
 
     @always_inline
     fn __gt__(self, other: Self) -> Bool:
-        """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
+        """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's.
+        """
         return contrast(self) > contrast(other)
 
     @always_inline
     fn __gt__(self, other: Self.Coef) -> Bool:
-        """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's."""
+        """Defines the `>` greater-than operator. Returns true if the hybrids measure is greater than the other's.
+        """
         return contrast(self) > contrast[square](other)
 
     @always_inline
     fn __ge__(self, other: Self) -> Bool:
-        """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
+        """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's.
+        """
         return contrast(self) >= contrast(other)
 
     @always_inline
     fn __ge__(self, other: Self.Coef) -> Bool:
-        """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's."""
+        """Defines the `>=` greater-than-or-equal operator. Returns true if the hybrids measure is greater than or equal to the other's.
+        """
         return contrast(self) >= contrast[square](other)
-
 
     # +------( Unary )------+ #
     #
@@ -250,7 +267,7 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     fn __neg__(self) -> Self:
         """Defines the unary `-` negative operator. Returns the negative of this hybrid number."""
         return Self(-self.re, -self.im)
-    
+
     @always_inline
     fn conjugate(self) -> Self:
         """
@@ -281,15 +298,17 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
         Returns:
             The hybrid denomer.
         """
+
         @parameter
-        if absolute: return abs(self.inner(self))
+        if absolute:
+            return abs(self.inner(self))
         return self.inner(self)
 
     @always_inline
     fn measure[absolute: Bool = False](self) -> Self.Coef:
         """
         Gets the measure of this hybrid number.
-        
+
         This is similar to magnitude, but is not guaranteed to be positive when the antiox squared is positive.
 
         Equal to the square root of the denomer.
@@ -305,16 +324,19 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
         Returns:
             The hybrid measure.
         """
+
         @parameter
-        if square != 0: return sqrt(self.denomer[absolute]())
+        if square != 0:
+            return sqrt(self.denomer[absolute]())
         return abs(self.re)
 
     @always_inline
     fn argument[branch: Int = 0](self) -> Float64:
         """Gets the argument of this hybrid number."""
+
         @parameter
         if square == -1:
-            return atan(self.im / self.re) + branch*pi
+            return atan(self.im / self.re) + branch * pi
         elif square == 0:
             return self.im / self.re
         elif square == 1:
@@ -325,7 +347,6 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     @always_inline
     fn normalized(self) -> Self:
         return self / self.measure()
-
 
     # +------( Products )------+ #
     #
@@ -344,9 +365,11 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
         Returns:
             The result of taking the outer product.
         """
+
         @parameter
-        if square == 0: return self.re*other.re
-        return self.re*other.re - square*self.im*other.im
+        if square == 0:
+            return self.re * other.re
+        return self.re * other.re - square * self.im * other.im
 
     @always_inline
     fn outer(self, other: Self) -> Self:
@@ -363,54 +386,56 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
         Returns:
             The result of taking the outer product.
         """
-        return Self(0, self.re*other.im - self.im*other.re)
+        return Self(0, self.re * other.im - self.im * other.re)
 
-    
     # +------( Arithmetic )------+ #
     #
     # +--- addition
-    @always_inline # Hybrid + Scalar
+    @always_inline  # Hybrid + Scalar
     fn __add__(self, other: Self.Coef) -> Self:
         return Self(self.re + other, self.im)
-    
-    @always_inline # Hybrid + Hybrid
-    fn __add__[__:None=None](self, other: Self) -> Self:
+
+    @always_inline  # Hybrid + Hybrid
+    fn __add__[__: None = None](self, other: Self) -> Self:
         return Self(self.re + other.re, self.im + other.im)
 
     # +--- subtraction
-    @always_inline # Hybrid - Scalar
+    @always_inline  # Hybrid - Scalar
     fn __sub__(self, other: Self.Coef) -> Self:
         return Self(self.re - other, self.im)
-    
-    @always_inline # Hybrid - Hybrid
-    fn __sub__[__:None=None](self, other: Self) -> Self:
+
+    @always_inline  # Hybrid - Hybrid
+    fn __sub__[__: None = None](self, other: Self) -> Self:
         return Self(self.re - other.re, self.im - other.im)
 
     # +--- multiplication
-    @always_inline # Hybrid * Scalar
+    @always_inline  # Hybrid * Scalar
     fn __mul__(self, other: Self.Coef) -> Self:
-        return Self(self.re*other, self.im*other)
+        return Self(self.re * other, self.im * other)
 
-    @always_inline # Hybrid * Hybrid
-    fn __mul__[__:None=None](self, other: Self) -> Self:
-        return Self(self.re*other.re + square*self.im*other.im, self.re*other.im + self.im*other.re)
+    @always_inline  # Hybrid * Hybrid
+    fn __mul__[__: None = None](self, other: Self) -> Self:
+        return Self(
+            self.re * other.re + square * self.im * other.im,
+            self.re * other.im + self.im * other.re,
+        )
 
     # +--- division
-    @always_inline # Hybrid / Scalar
+    @always_inline  # Hybrid / Scalar
     fn __truediv__(self, other: Self.Coef) -> Self:
-        return self * (1/other)
+        return self * (1 / other)
 
-    @always_inline # Hybrid / Hybrid
-    fn __truediv__[__:None=None](self, other: Self) -> Self:
-        return self*other.conjugate() / other.denomer()
+    @always_inline  # Hybrid / Hybrid
+    fn __truediv__[__: None = None](self, other: Self) -> Self:
+        return self * other.conjugate() / other.denomer()
 
-    @always_inline # Hybrid // Scalar
+    @always_inline  # Hybrid // Scalar
     fn __floordiv__(self, other: Self.Coef) -> HybridIntLiteral[square]:
         return (self / other).__hybrid_int_literal__()
 
-    @always_inline # Hybrid // Hybrid
-    fn __floordiv__[__:None=None](self, other: Self) -> HybridIntLiteral[square]:
-        return self*other.conjugate() // other.denomer()
+    @always_inline  # Hybrid // Hybrid
+    fn __floordiv__[__: None = None](self, other: Self) -> HybridIntLiteral[square]:
+        return self * other.conjugate() // other.denomer()
 
     # # +--- exponentiation
     # @always_inline # Hybrid ** Scalar
@@ -420,52 +445,51 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     # @always_inline # Hybrid ** Hybrid
     # fn __pow__(self, other: Self) -> Self:
     #     return pow(self, other)
-    
-    
+
     # +------( Reverse Arithmetic )------+ #
     #
     # +--- addition
-    @always_inline # Scalar + Hybrid
+    @always_inline  # Scalar + Hybrid
     fn __radd__(self, other: Self.Coef) -> Self:
         return Self(other + self.re, self.im)
 
-    @always_inline # Hybrid + Hybrid
-    fn __radd__[__:None=None](self, other: Self) -> Self:
+    @always_inline  # Hybrid + Hybrid
+    fn __radd__[__: None = None](self, other: Self) -> Self:
         return other + self
 
     # +--- subtraction
-    @always_inline # Scalar - Hybrid
+    @always_inline  # Scalar - Hybrid
     fn __rsub__(self, other: Self.Coef) -> Self:
         return Self(other - self.re, -self.im)
 
-    @always_inline # Hybrid - Hybrid
-    fn __rsub__[__:None=None](self, other: Self) -> Self:
+    @always_inline  # Hybrid - Hybrid
+    fn __rsub__[__: None = None](self, other: Self) -> Self:
         return other - self
 
     # +--- multiplication
-    @always_inline # Scalar * Hybrid
+    @always_inline  # Scalar * Hybrid
     fn __rmul__(self, other: Self.Coef) -> Self:
         return Self(other * self.re, other * self.im)
 
-    @always_inline # Hybrid * Hybrid
-    fn __rmul__[__:None=None](self, other: Self) -> Self:
+    @always_inline  # Hybrid * Hybrid
+    fn __rmul__[__: None = None](self, other: Self) -> Self:
         return other * self
 
     # +--- division
-    @always_inline # Scalar / Hybrid
+    @always_inline  # Scalar / Hybrid
     fn __rtruediv__(self, other: Self.Coef) -> Self:
-        return other*self.conjugate() / self.denomer()
+        return other * self.conjugate() / self.denomer()
 
-    @always_inline # Hybrid / Hybrid
-    fn __rtruediv__[__:None=None](self, other: Self) -> Self:
+    @always_inline  # Hybrid / Hybrid
+    fn __rtruediv__[__: None = None](self, other: Self) -> Self:
         return other / self
 
-    @always_inline # Scalar // Hybrid
+    @always_inline  # Scalar // Hybrid
     fn __rfloordiv__(self, other: Self.Coef) -> HybridIntLiteral[square]:
-        return other*self.conjugate() // self.denomer()
+        return other * self.conjugate() // self.denomer()
 
-    @always_inline # Hybrid // Hybrid
-    fn __rfloordiv__[__:None=None](self, other: Self) -> HybridIntLiteral[square]:
+    @always_inline  # Hybrid // Hybrid
+    fn __rfloordiv__[__: None = None](self, other: Self) -> HybridIntLiteral[square]:
         return other // self
 
     # +--- exponentiation
@@ -476,52 +500,51 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     # @always_inline # Hybrid ** Hybrid
     # fn __rpow__(self, other: Self) -> Self:
     #     return pow(other, self)
-    
-    
+
     # +------( In Place Arithmetic )------+ #
     #
     # +--- addition
-    @always_inline # Hybrid += Scalar
+    @always_inline  # Hybrid += Scalar
     fn __iadd__(inout self, other: Self.Coef):
         self = self + other
-    
-    @always_inline # Hybrid += Hybrid
-    fn __iadd__[__:None=None](inout self, other: Self):
+
+    @always_inline  # Hybrid += Hybrid
+    fn __iadd__[__: None = None](inout self, other: Self):
         self = self + other
 
     # +--- subtraction
-    @always_inline # Hybrid -= Scalar
+    @always_inline  # Hybrid -= Scalar
     fn __isub__(inout self, other: Self.Coef):
         self = self - other
-    
-    @always_inline # Hybrid -= Hybrid
-    fn __isub__[__:None=None](inout self, other: Self):
+
+    @always_inline  # Hybrid -= Hybrid
+    fn __isub__[__: None = None](inout self, other: Self):
         self = self - other
 
     # +--- multiplication
-    @always_inline # Hybrid *= Scalar
+    @always_inline  # Hybrid *= Scalar
     fn __imul__(inout self, other: Self.Coef):
         self = self * other
 
-    @always_inline # Hybrid *= Hybrid
-    fn __imul__[__:None=None](inout self, other: Self):
+    @always_inline  # Hybrid *= Hybrid
+    fn __imul__[__: None = None](inout self, other: Self):
         self = self * other
 
     # +--- division
-    @always_inline # Hybrid /= Scalar
+    @always_inline  # Hybrid /= Scalar
     fn __itruediv__(inout self, other: Self.Coef):
         self = self / other
 
-    @always_inline # Hybrid /= Hybrid
-    fn __itruediv__[__:None=None](inout self, other: Self):
+    @always_inline  # Hybrid /= Hybrid
+    fn __itruediv__[__: None = None](inout self, other: Self):
         self = self / other
 
-    @always_inline # Hybrid //= Scalar
+    @always_inline  # Hybrid //= Scalar
     fn __ifloordiv__(inout self, other: Self.Coef):
         self = self // other
 
-    @always_inline # Hybrid //= Hybrid
-    fn __ifloordiv__[__:None=None](inout self, other: Self):
+    @always_inline  # Hybrid //= Hybrid
+    fn __ifloordiv__[__: None = None](inout self, other: Self):
         self = self // other
 
     # +--- exponentiation

@@ -1,7 +1,7 @@
-# x--------------------------------------------------------------------------x #
+# x----------------------------------------------------------------------------------------------x #
 # | MIT License
 # | Copyright (c) 2024 Helehex
-# x--------------------------------------------------------------------------x #
+# x----------------------------------------------------------------------------------------------x #
 """Implements the moplex io module.
 
 Defines io functions for generalized complex numbers.
@@ -21,6 +21,7 @@ fn symbol[square: IntLiteral]() -> String:
     """
     return symbol[SIMD[DType.index, 1](square)]()
 
+
 @always_inline("nodebug")
 fn symbol[square: FloatLiteral]() -> String:
     """
@@ -33,6 +34,7 @@ fn symbol[square: FloatLiteral]() -> String:
         A string representing the unit antiox.
     """
     return symbol[SIMD[DType.float64, 1](square)]()
+
 
 @always_inline("nodebug")
 fn symbol[square: Int]() -> String:
@@ -47,6 +49,7 @@ fn symbol[square: Int]() -> String:
     """
     return symbol[SIMD[DType.index, 1](square)]()
 
+
 @always_inline("nodebug")
 fn symbol[type: DType, //, square: Scalar[type]]() -> String:
     """
@@ -59,6 +62,7 @@ fn symbol[type: DType, //, square: Scalar[type]]() -> String:
     Returns:
         A string representing the unit antiox.
     """
+
     @parameter
     if square == -1:
         return "i"
