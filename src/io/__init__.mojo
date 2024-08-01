@@ -9,6 +9,30 @@ Defines io functions for generalized complex numbers.
 
 
 @always_inline("nodebug")
+fn antiox(symbol: StringLiteral) -> IntLiteral:
+    if symbol == "i":
+        return -1
+    elif symbol == "o":
+        return 0
+    elif symbol =="x":
+        return 1
+    debug_assert(False, "invalid antiox")
+    return 0
+
+
+@always_inline("nodebug")
+fn antiox(symbol: String) -> IntLiteral:
+    if symbol == "i":
+        return -1
+    elif symbol == "o":
+        return 0
+    elif symbol =="x":
+        return 1
+    debug_assert(False, "invalid antiox")
+    return 0
+
+
+@always_inline("nodebug")
 fn symbol[square: IntLiteral]() -> String:
     """
     Gets the symbol corrosponding to a unit antiox.

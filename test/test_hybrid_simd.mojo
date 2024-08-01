@@ -17,6 +17,8 @@ def main():
     test_unitize()
     test_cast()
     test_str()
+    test_getattr()
+    # test_setattr()
     test_getcoef()
     test_setcoef()
     test_getlane()
@@ -98,6 +100,28 @@ def test_str():
     assert_equal(Hyperplex64(1, 2).__str__(), "1.0 + 2.0x")
     assert_equal(HybridSIMD[DType.float64, 1, -2](1, 2).__str__(), "1.0 + 2.0[-2.0]")
     assert_equal(HybridSIMD[DType.float64, 1, 0.5](1, 2).__str__(), "1.0 + 2.0[0.5]")
+
+
+def test_getattr():
+    assert_equal(Complex64(1, 2).i, 2)
+    assert_equal(Dualplex64(1, 2).o, 2)
+    assert_equal(Hyperplex64(1, 2).x, 2)
+
+
+# TODO: resolve https://github.com/modularml/mojo/issues/3341
+
+# def test_setattr():
+#     var complex = Complex64(1, 2)
+#     complex.i = 4
+#     assert_equal(complex, Complex64(1, 4))
+
+#     var dualplex = Dualplex64(1, 2)
+#     dualplex.o = 4
+#     assert_equal(dualplex, Dualplex64(1, 4))
+
+#     var hyperplex = Hyperplex64(1, 2)
+#     hyperplex.x = 4
+#     assert_equal(hyperplex, Hyperplex64(1, 4))
 
 
 def test_getcoef():

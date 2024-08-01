@@ -16,7 +16,7 @@ from random import rand as _rand
 fn rand[type: DType, size: Int]() -> SIMD[type, size]:
     var p: UnsafePointer[Scalar[type]] = stack_allocation[size, Scalar[type]]()
     _rand(p, size)
-    return SIMD[type, size].load(p)
+    return UnsafePointer[Scalar[type]].load[width=size](p)
 
 
 fn rand[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type, size, square]:

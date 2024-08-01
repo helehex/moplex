@@ -16,6 +16,8 @@ def main():
     test_is_null()
     test_unitize()
     test_str()
+    test_getattr()
+    # test_setattr()
     test_getcoef()
     test_setcoef()
     test_denomer()
@@ -82,6 +84,26 @@ def test_str():
     assert_equal(HyperplexInt(1, 2).__str__(), "1 + 2x")
     assert_equal(HybridInt[-2](1, 2).__str__(), "1 + 2[-2]")
     assert_equal(HybridInt[3](1, 2).__str__(), "1 + 2[3]")
+
+
+def test_getattr():
+    assert_equal(ComplexInt(1, 2).i, 2)
+    assert_equal(DualplexInt(1, 2).o, 2)
+    assert_equal(HyperplexInt(1, 2).x, 2)
+
+
+# def test_setattr():
+#     var complex = ComplexInt(1, 2)
+#     complex.i = 4
+#     assert_equal(complex, ComplexInt(1, 4))
+
+#     var dualplex = DualplexInt(1, 2)
+#     dualplex.o = 4
+#     assert_equal(dualplex, DualplexInt(1, 4))
+
+#     var hyperplex = HyperplexInt(1, 2)
+#     hyperplex.x = 4
+#     assert_equal(hyperplex, HyperplexInt(1, 4))
 
 
 def test_getcoef():

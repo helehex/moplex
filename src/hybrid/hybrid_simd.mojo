@@ -173,7 +173,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     @always_inline  # Hybrid
     fn __init__(inout self, *h: Self.Lane):
         """Initializes a HybridSIMD from a variadic argument of hybrid elements."""
-        var result: Self = Self {re: h[0].re, im: h[0].im}
+        var result = Self(h[0].re, h[0].im)
         for i in range(len(h)):
             result.setlane(i, h[i])
         self = result
@@ -269,6 +269,14 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     # +------( Subscript )------+ #
     #
+    @always_inline
+    fn __getattr__[key: StringLiteral](self) -> Self.Coef:
+        return self.get_antiox[antiox(key)]()
+
+    @always_inline
+    fn __setattr__[key: StringLiteral](inout self, val: Self.Coef):
+        self.set_antiox[antiox(key)](val)
+
     @always_inline
     fn __getitem__(self, idx: Int) -> Self.Lane:
         return self.getlane(idx)

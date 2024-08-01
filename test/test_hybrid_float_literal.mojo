@@ -16,6 +16,8 @@ def main():
     test_is_null()
     test_unitize()
     test_str()
+    test_getattr()
+    # test_setattr()
     test_getcoef()
     test_setcoef()
     # test_denomer()
@@ -81,6 +83,26 @@ def test_str():
     assert_equal(HyperplexFloatLiteral(1, 2).__str__(), "1.0 + 2.0x")
     assert_equal(HybridFloatLiteral[-2](1, 2).__str__(), "1.0 + 2.0[-2.0]")
     assert_equal(HybridFloatLiteral[3](1, 2).__str__(), "1.0 + 2.0[3.0]")
+
+
+def test_getattr():
+    assert_equal(ComplexFloatLiteral(1, 2).i, 2)
+    assert_equal(DualplexFloatLiteral(1, 2).o, 2)
+    assert_equal(HyperplexFloatLiteral(1, 2).x, 2)
+
+
+# def test_setattr():
+#     var complex = ComplexFloatLiteral(1, 2)
+#     complex.i = 4
+#     assert_equal(complex, ComplexFloatLiteral(1, 4))
+
+#     var dualplex = DualplexFloatLiteral(1, 2)
+#     dualplex.o = 4
+#     assert_equal(dualplex, DualplexFloatLiteral(1, 4))
+
+#     var hyperplex = HyperplexFloatLiteral(1, 2)
+#     hyperplex.x = 4
+#     assert_equal(hyperplex, HyperplexFloatLiteral(1, 4))
 
 
 def test_getcoef():

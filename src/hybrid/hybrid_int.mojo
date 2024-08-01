@@ -113,6 +113,14 @@ struct HybridInt[square: FloatLiteral](
     # +------( Subscript )------+ #
     #
     @always_inline
+    fn __getattr__[key: StringLiteral](self) -> Float64:
+        return self.get_antiox[antiox(key)]()
+
+    @always_inline
+    fn __setattr__[key: StringLiteral](inout self, val: Float64):
+        self.set_antiox[antiox(key)](val)
+
+    @always_inline
     fn getcoef(self, idx: Int) -> Self.Coef:
         """
         Gets a coefficient at an index.

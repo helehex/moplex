@@ -125,6 +125,14 @@ struct HybridFloatLiteral[square: FloatLiteral](StringableCollectionElement, Equ
     # +------( Subscript )------+ #
     #
     @always_inline
+    fn __getattr__[key: StringLiteral](self) -> FloatLiteral:
+        return self.get_antiox[antiox(key)]()
+
+    @always_inline
+    fn __setattr__[key: StringLiteral](inout self, val: FloatLiteral):
+        self.set_antiox[antiox(key)](val)
+
+    @always_inline
     fn getcoef(self, idx: Int) -> Self.Coef:
         """
         Gets a coefficient at an index.
