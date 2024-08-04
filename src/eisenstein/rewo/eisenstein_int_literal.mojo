@@ -79,7 +79,10 @@ struct EisIntLiteral_rewo(EqualityComparable):
     fn __floordiv__(a: Self, b: Self) -> Self:
         var div: Self.Coef = b.re * b.re + b.wo * b.wo - b.re * b.wo
         var arebwo: Self.Coef = a.re * b.wo
-        return Self(a.re * b.re + a.wo * b.wo - arebwo, a.wo * b.re - arebwo) // div
+        return (
+            Self(a.re * b.re + a.wo * b.wo - arebwo, a.wo * b.re - arebwo)
+            // div
+        )
 
     # +------( Subscript )------+ #
     #

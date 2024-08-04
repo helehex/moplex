@@ -14,7 +14,7 @@ fn antiox(symbol: StringLiteral) -> IntLiteral:
         return -1
     elif symbol == "o":
         return 0
-    elif symbol =="x":
+    elif symbol == "x":
         return 1
     debug_assert(False, "invalid antiox")
     return 0
@@ -26,7 +26,7 @@ fn antiox(symbol: String) -> IntLiteral:
         return -1
     elif symbol == "o":
         return 0
-    elif symbol =="x":
+    elif symbol == "x":
         return 1
     debug_assert(False, "invalid antiox")
     return 0
@@ -88,6 +88,45 @@ fn symbol[type: DType, //, square: Scalar[type]]() -> String:
     """
 
     @parameter
+    if square == -1:
+        return "i"
+    elif square == 0:
+        return "o"
+    elif square == 1:
+        return "x"
+    else:
+        return "[" + str(square) + "]"
+
+
+@always_inline("nodebug")
+fn symbol(square: Int) -> String:
+    """
+    Gets the symbol corrosponding to a unit antiox.
+
+    Args:
+        square: The square of the antiox to find the symbol of.
+
+    Returns:
+        A string representing the unit antiox.
+    """
+    return symbol(SIMD[DType.index, 1](square))
+
+
+@always_inline("nodebug")
+fn symbol[type: DType, //](square: Scalar[type]) -> String:
+    """
+    Gets the symbol corrosponding to a unit antiox.
+
+    Parameters:
+        type: The data type of the square.
+
+    Args:
+        square: The square of the antiox to find the symbol of.
+
+    Returns:
+        A string representing the unit antiox.
+    """
+
     if square == -1:
         return "i"
     elif square == 0:

@@ -10,7 +10,7 @@ from testing.testing import (
     __call_location,
     _assert_cmp_error,
 )
-from moplex import HybridSIMD, symbol
+from moplex import HybridSIMD, symbol, HybridFloatLiteral
 
 
 @always_inline
@@ -80,6 +80,66 @@ fn assert_almost_equal[
             err += " (" + msg + ")"
 
         raise _assert_error(err, location.or_else(__call_location()))
+
+
+
+@always_inline
+fn assert_equal_(
+    lhs: HybridFloatLiteral,
+    rhs: __type_of(lhs),
+    msg: String = "",
+    *,
+    location: Optional[_SourceLocation] = None,
+) raises:
+    """Asserts that the input values are equal. If it is not then an Error
+    is raised.
+
+    Parameters:
+        T: A Testable type.
+
+    Args:
+        lhs: The lhs of the equality.
+        rhs: The rhs of the equality.
+        msg: The message to be printed if the assertion fails.
+        location: The location of the error (default to the `__call_location`).
+
+    Raises:
+        An Error with the provided message if assert fails and `None` otherwise.
+    """
+    if lhs != rhs:
+        raise _assert_cmp_error["`left == right` comparison"](
+            str(lhs), str(rhs), msg=msg, loc=location.or_else(__call_location())
+        )
+
+
+@always_inline
+fn assert_not_equal_(
+    lhs: HybridFloatLiteral,
+    rhs: __type_of(lhs),
+    msg: String = "",
+    *,
+    location: Optional[_SourceLocation] = None,
+) raises:
+    """Asserts that the input values are not equal. If it is not then an
+    Error is raised.
+
+    Parameters:
+        T: A Testable type.
+
+    Args:
+        lhs: The lhs of the inequality.
+        rhs: The rhs of the inequality.
+        msg: The message to be printed if the assertion fails.
+        location: The location of the error (default to the `__call_location`).
+
+    Raises:
+        An Error with the provided message if assert fails and `None` otherwise.
+    """
+    if lhs == rhs:
+        raise _assert_cmp_error["`left != right` comparison"](
+            str(lhs), str(rhs), msg=msg, loc=location.or_else(__call_location())
+        )
+
 
 
 # @always_inline

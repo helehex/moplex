@@ -40,7 +40,9 @@ fn newtons_method[
         The converged value, or `nan` if no solution was found.
     """
 
-    constrained[type.is_floating_point(), "`type` parameter must be a floating-point"]()
+    constrained[
+        type.is_floating_point(), "`type` parameter must be a floating-point"
+    ]()
     alias _nan: SIMD[type, size] = nan[type]()
 
     var completed: SIMD[DType.bool, size] = False
@@ -145,9 +147,7 @@ fn newtons_method[
 ](
     x0: HybridSIMD[type, size, square],
     y_offset: HybridSIMD[type, size, square] = 0,
-) -> HybridSIMD[
-    type, size, square
-]:
+) -> HybridSIMD[type, size, square]:
     """
     Implements newtons method for solving trancendental equations.\n
     Converges on the roots of the input function `f` using it's derivative `fp`.\n
@@ -174,7 +174,9 @@ fn newtons_method[
         The converged value, or `nan` if no solution was found.
     """
 
-    constrained[type.is_floating_point(), "`type` parameter must be a floating-point"]()
+    constrained[
+        type.is_floating_point(), "`type` parameter must be a floating-point"
+    ]()
     alias _nan: SIMD[type, size] = nan[type]()
 
     var completed: SIMD[DType.bool, size] = False

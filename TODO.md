@@ -1,11 +1,8 @@
 - at some point, stop using the `__None=None` anti-pattern. more language features would make it easy.
-- fix converting literals to string (when possible)
-- add `HybridInt ** Int` overloads
-- add literal math functions
+- fix current hack for converting hybrid literals to strings
 - fill out multiplex
-- more usage examples, mandelbrot
 - better branch selection for lambert w and others
-- fill out remaining hybrid trig functions
+- fill out remaining hybrid and hybrid literal trig functions
 - rectify imaginary measure with hyperplex better, for pow and such
 - HybridVector
 - think about either:

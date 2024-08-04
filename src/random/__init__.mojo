@@ -19,8 +19,12 @@ fn rand[type: DType, size: Int]() -> SIMD[type, size]:
     return UnsafePointer[Scalar[type]].load[width=size](p)
 
 
-fn rand[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type, size, square]:
-    return HybridSIMD[type, size, square](rand[type, size](), rand[type, size]())
+fn rand[
+    type: DType, size: Int, square: FloatLiteral
+]() -> HybridSIMD[type, size, square]:
+    return HybridSIMD[type, size, square](
+        rand[type, size](), rand[type, size]()
+    )
 
 
 fn coin() -> Bool:
@@ -36,14 +40,16 @@ fn random_sign[type: DType, size: Int]() -> SIMD[type, size]:
     return simd_select[type](rand[DType.index, size]() < 0, -1, 1)
 
 
-fn random_sign[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type, size, square]:
+fn random_sign[
+    type: DType, size: Int, square: FloatLiteral
+]() -> HybridSIMD[type, size, square]:
     """
     Returns a random hybrid number with measure equal to 1.
     """
     # define integral type to return either {1, -1, i, -i}
 
     var theta = rand[type, size]() * tau
-    var result = expa[square](theta)
+    var result = hexp[square](theta)
 
     @parameter
     if square < 0:
@@ -63,7 +69,9 @@ fn random_frac[type: DType, size: Int]() -> SIMD[type, size]:
     return (rand[type, size]() * 2) - 1
 
 
-fn random_frac[type: DType, size: Int, square: FloatLiteral]() -> HybridSIMD[type, size, square]:
+fn random_frac[
+    type: DType, size: Int, square: FloatLiteral
+]() -> HybridSIMD[type, size, square]:
     # change densities
     @parameter
     if square == -1:

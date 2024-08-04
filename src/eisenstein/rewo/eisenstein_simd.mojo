@@ -92,7 +92,10 @@ struct EisSIMD_rewo[type: DType = DType.index, size: Int = 1](
     fn __floordiv__(a: Self, b: Self) -> Self:
         var div = b.re * b.re + b.wo * b.wo - b.re * b.wo
         var arebwo = a.re * b.wo
-        return Self(a.re * b.re + a.wo * b.wo - arebwo, a.wo * b.re - arebwo) // div
+        return (
+            Self(a.re * b.re + a.wo * b.wo - arebwo, a.wo * b.re - arebwo)
+            // div
+        )
 
     # +------( Subscript )------+ #
     #
@@ -192,7 +195,9 @@ struct EisSIMD_rewo[type: DType = DType.index, size: Int = 1](
         self.format_to["po", "\n"](writer)
 
     @no_inline
-    fn format_to[fmt: StringLiteral, sep: StringLiteral = "\n"](self, inout writer: Formatter):
+    fn format_to[
+        fmt: StringLiteral, sep: StringLiteral = "\n"
+    ](self, inout writer: Formatter):
         @parameter
         if size == 1:
 

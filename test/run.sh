@@ -1,3 +1,4 @@
+#!/bin/bash
 # x----------------------------------------------------------------------------------------------x #
 # | MIT License
 # | Copyright (c) 2024 Helehex
@@ -16,7 +17,7 @@ FAILED_COUNT=0
 source ${TEST_DIR}/build.sh
 
 for test in ${TEST_DIR}/test_*.mojo; do
-    echo -e "\n╓─── Testing: $(basename $test)"
+    echo -e "\n╓─── Testing: "$(basename $test)
     if mojo $test; then
         echo -e ${GREEN}╙─── Test Successful!${NC}
     else

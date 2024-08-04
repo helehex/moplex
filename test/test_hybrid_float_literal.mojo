@@ -4,7 +4,7 @@
 # x----------------------------------------------------------------------------------------------x #
 
 from testing import assert_true, assert_false, assert_equal
-from _testing import assert_almost_equal
+from _testing import assert_almost_equal, assert_equal_
 
 from moplex.math.limit import NAN
 from moplex.math.constants import e, pi
@@ -78,11 +78,11 @@ def test_unitize():
 
 
 def test_str():
-    assert_equal(ComplexFloatLiteral(1, 2).__str__(), "1.0 + 2.0i")
-    assert_equal(DualplexFloatLiteral(1, 2).__str__(), "1.0 + 2.0o")
-    assert_equal(HyperplexFloatLiteral(1, 2).__str__(), "1.0 + 2.0x")
-    assert_equal(HybridFloatLiteral[-2](1, 2).__str__(), "1.0 + 2.0[-2.0]")
-    assert_equal(HybridFloatLiteral[3](1, 2).__str__(), "1.0 + 2.0[3.0]")
+    assert_equal(str(ComplexFloatLiteral(1, 2)), "1.0 + 2.0i")
+    assert_equal(str(DualplexFloatLiteral(1, 2)), "1.0 + 2.0o")
+    assert_equal(str(HyperplexFloatLiteral(1, 2)), "1.0 + 2.0x")
+    assert_equal(str(HybridFloatLiteral[-2](1, 2)), "1.0 + 2.0[-2.0]")
+    assert_equal(str(HybridFloatLiteral[3](1, 2)), "1.0 + 2.0[3.0]")
 
 
 def test_getattr():
@@ -92,85 +92,85 @@ def test_getattr():
 
 
 # def test_setattr():
-#     var complex = ComplexFloatLiteral(1, 2)
+#     var complex: ComplexFloatLiteral = ComplexFloatLiteral(1, 2)
 #     complex.i = 4
-#     assert_equal(complex, ComplexFloatLiteral(1, 4))
+#     assert_equal_(complex, ComplexFloatLiteral(1, 4))
 
-#     var dualplex = DualplexFloatLiteral(1, 2)
+#     var dualplex: DualplexFloatLiteral = DualplexFloatLiteral(1, 2)
 #     dualplex.o = 4
-#     assert_equal(dualplex, DualplexFloatLiteral(1, 4))
+#     assert_equal_(dualplex, DualplexFloatLiteral(1, 4))
 
-#     var hyperplex = HyperplexFloatLiteral(1, 2)
+#     var hyperplex: HyperplexFloatLiteral = HyperplexFloatLiteral(1, 2)
 #     hyperplex.x = 4
-#     assert_equal(hyperplex, HyperplexFloatLiteral(1, 4))
+#     assert_equal_(hyperplex, HyperplexFloatLiteral(1, 4))
 
 
 def test_getcoef():
-    var h = ComplexFloatLiteral(1, 2)
+    var h: ComplexFloatLiteral = ComplexFloatLiteral(1, 2)
     assert_equal(h.getcoef(0), 1)
     assert_equal(h.getcoef(1), 2)
 
 
 def test_setcoef():
-    var h = ComplexFloatLiteral(1, 2)
+    var h: ComplexFloatLiteral = ComplexFloatLiteral(1, 2)
     h.setcoef(0, 9)
-    assert_equal(h, ComplexFloatLiteral(9, 2))
+    assert_equal_(h, ComplexFloatLiteral(9, 2))
     h.setcoef(1, 8)
-    assert_equal(h, ComplexFloatLiteral(9, 8))
+    assert_equal_(h, ComplexFloatLiteral(9, 8))
 
 
 def test_min():
     # +--- [-1]
-    assert_equal(ComplexFloatLiteral(5, 1).min(ComplexFloatLiteral(9, -8)), ComplexFloatLiteral(5, 1))
+    assert_equal_(ComplexFloatLiteral(5, 1).min(ComplexFloatLiteral(9, -8)), ComplexFloatLiteral(5, 1))
 
     # +--- [0]
-    assert_equal(DualplexFloatLiteral(3, 85).min(DualplexFloatLiteral(6, -6)), DualplexFloatLiteral(3, 85))
+    assert_equal_(DualplexFloatLiteral(3, 85).min(DualplexFloatLiteral(6, -6)), DualplexFloatLiteral(3, 85))
 
     # +--- [1]
-    assert_equal(HyperplexFloatLiteral(5,1).min(HyperplexFloatLiteral(9,-8)), HyperplexFloatLiteral(9,-8))
+    assert_equal_(HyperplexFloatLiteral(5,1).min(HyperplexFloatLiteral(9,-8)), HyperplexFloatLiteral(9,-8))
 
 
 def test_max():
     # +--- [-1]
-    assert_equal(ComplexFloatLiteral(5,1).max(ComplexFloatLiteral(9,-8)), ComplexFloatLiteral(9,-8))
+    assert_equal_(ComplexFloatLiteral(5,1).max(ComplexFloatLiteral(9,-8)), ComplexFloatLiteral(9,-8))
 
     # +--- [0]
-    assert_equal(DualplexFloatLiteral(3,85).max(DualplexFloatLiteral(6,-6)), DualplexFloatLiteral(6,-6))
+    assert_equal_(DualplexFloatLiteral(3,85).max(DualplexFloatLiteral(6,-6)), DualplexFloatLiteral(6,-6))
 
     # +--- [1]
-    assert_equal(HyperplexFloatLiteral(5,1).max(HyperplexFloatLiteral(9,-8)), HyperplexFloatLiteral(5,1))
+    assert_equal_(HyperplexFloatLiteral(5,1).max(HyperplexFloatLiteral(9,-8)), HyperplexFloatLiteral(5,1))
 
 
 def test_add():
-    assert_equal(ComplexFloatLiteral(1, 2) + ComplexFloatLiteral(2, 4) + 3, ComplexFloatLiteral(6, 6))
-    assert_equal(DualplexFloatLiteral(1, 2) + DualplexFloatLiteral(2, 4) + 3, DualplexFloatLiteral(6, 6))
-    assert_equal(HyperplexFloatLiteral(1, 2) + HyperplexFloatLiteral(2, 4) + 3, HyperplexFloatLiteral(6, 6))
+    assert_equal_(ComplexFloatLiteral(1, 2) + ComplexFloatLiteral(2, 4) + 3, ComplexFloatLiteral(6, 6))
+    assert_equal_(DualplexFloatLiteral(1, 2) + DualplexFloatLiteral(2, 4) + 3, DualplexFloatLiteral(6, 6))
+    assert_equal_(HyperplexFloatLiteral(1, 2) + HyperplexFloatLiteral(2, 4) + 3, HyperplexFloatLiteral(6, 6))
 
 
 def test_sub():
-    assert_equal(10 - ComplexFloatLiteral(5, 5) - ComplexFloatLiteral(-1, 1), ComplexFloatLiteral(6, -6))
-    assert_equal(10 - DualplexFloatLiteral(5, 5) - DualplexFloatLiteral(-1, 1), DualplexFloatLiteral(6, -6))
-    assert_equal(10 - HyperplexFloatLiteral(5, 5) - HyperplexFloatLiteral(-1, 1), HyperplexFloatLiteral(6, -6))
+    assert_equal_(10 - ComplexFloatLiteral(5, 5) - ComplexFloatLiteral(-1, 1), ComplexFloatLiteral(6, -6))
+    assert_equal_(10 - DualplexFloatLiteral(5, 5) - DualplexFloatLiteral(-1, 1), DualplexFloatLiteral(6, -6))
+    assert_equal_(10 - HyperplexFloatLiteral(5, 5) - HyperplexFloatLiteral(-1, 1), HyperplexFloatLiteral(6, -6))
 
 
 def test_mul():
     # +--- [-1]
-    assert_equal(ComplexFloatLiteral(0, 0) * ComplexFloatLiteral(1, 2), ComplexFloatLiteral(0, 0))
-    assert_equal(ComplexFloatLiteral(1, 0) * ComplexFloatLiteral(1, 2), ComplexFloatLiteral(1, 2))
-    assert_equal(ComplexFloatLiteral(0, 2) * ComplexFloatLiteral(0, 2), ComplexFloatLiteral(-4, 0))
-    assert_equal(ComplexFloatLiteral(1, 2) * ComplexFloatLiteral(1, 2), ComplexFloatLiteral(-3, 4))
+    assert_equal_(ComplexFloatLiteral(0, 0) * ComplexFloatLiteral(1, 2), ComplexFloatLiteral(0, 0))
+    assert_equal_(ComplexFloatLiteral(1, 0) * ComplexFloatLiteral(1, 2), ComplexFloatLiteral(1, 2))
+    assert_equal_(ComplexFloatLiteral(0, 2) * ComplexFloatLiteral(0, 2), ComplexFloatLiteral(-4, 0))
+    assert_equal_(ComplexFloatLiteral(1, 2) * ComplexFloatLiteral(1, 2), ComplexFloatLiteral(-3, 4))
     
     # +--- [0]
-    assert_equal(DualplexFloatLiteral(0, 0) * DualplexFloatLiteral(1, 2), DualplexFloatLiteral(0, 0))
-    assert_equal(DualplexFloatLiteral(1, 0) * DualplexFloatLiteral(1, 2), DualplexFloatLiteral(1, 2))
-    assert_equal(DualplexFloatLiteral(0, 2) * DualplexFloatLiteral(0, 2), DualplexFloatLiteral(0, 0))
-    assert_equal(DualplexFloatLiteral(1, 2) * DualplexFloatLiteral(1, 2), DualplexFloatLiteral(1, 4))
+    assert_equal_(DualplexFloatLiteral(0, 0) * DualplexFloatLiteral(1, 2), DualplexFloatLiteral(0, 0))
+    assert_equal_(DualplexFloatLiteral(1, 0) * DualplexFloatLiteral(1, 2), DualplexFloatLiteral(1, 2))
+    assert_equal_(DualplexFloatLiteral(0, 2) * DualplexFloatLiteral(0, 2), DualplexFloatLiteral(0, 0))
+    assert_equal_(DualplexFloatLiteral(1, 2) * DualplexFloatLiteral(1, 2), DualplexFloatLiteral(1, 4))
     
     # +--- [1]
-    assert_equal(HyperplexFloatLiteral(0, 0) * HyperplexFloatLiteral(1, 2), HyperplexFloatLiteral(0, 0))
-    assert_equal(HyperplexFloatLiteral(1, 0) * HyperplexFloatLiteral(1, 2), HyperplexFloatLiteral(1, 2))
-    assert_equal(HyperplexFloatLiteral(0, 2) * HyperplexFloatLiteral(0, 2), HyperplexFloatLiteral(4, 0))
-    assert_equal(HyperplexFloatLiteral(1, 2) * HyperplexFloatLiteral(1, 2), HyperplexFloatLiteral(5, 4))
+    assert_equal_(HyperplexFloatLiteral(0, 0) * HyperplexFloatLiteral(1, 2), HyperplexFloatLiteral(0, 0))
+    assert_equal_(HyperplexFloatLiteral(1, 0) * HyperplexFloatLiteral(1, 2), HyperplexFloatLiteral(1, 2))
+    assert_equal_(HyperplexFloatLiteral(0, 2) * HyperplexFloatLiteral(0, 2), HyperplexFloatLiteral(4, 0))
+    assert_equal_(HyperplexFloatLiteral(1, 2) * HyperplexFloatLiteral(1, 2), HyperplexFloatLiteral(5, 4))
 
 
 def test_truediv():
