@@ -259,7 +259,7 @@ fn rsqrt(value: SIMD) -> __type_of(value):
     Returns:
         The elementwise reciprocal square root of x.
     """
-    from math import rsqrt as _rsqrt
+    from math import isqrt as _rsqrt
 
     return _rsqrt(value)
 
