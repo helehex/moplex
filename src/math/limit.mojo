@@ -4,6 +4,7 @@
 # x----------------------------------------------------------------------------------------------x #
 """Numerical Limits."""
 
+from collections import Optional
 from math.math import nan as _nan
 from math.math import isnan as _isnan
 

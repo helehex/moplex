@@ -1,5 +1,6 @@
 # ! helper functions for testing
 
+from collections import Optional
 from testing import assert_almost_equal as _assert_almost_equal
 from testing import assert_equal as _assert_equal
 from testing.testing import (
