@@ -7,6 +7,7 @@
 Defines generalized complex math functions.
 """
 
+from os import abort
 from .solver import newtons_method
 
 
@@ -15,7 +16,7 @@ from .solver import newtons_method
 # +----------------------------------------------------------------------------------------------+ #
 #
 @always_inline("nodebug")  # Scalar _ Scalar
-fn simd_select[
+fn select[
     type: DType, size: Int
 ](
     cond: SIMD[DType.bool, size],
@@ -41,7 +42,7 @@ fn simd_select[
 
 
 @always_inline("nodebug")  # Scalar _ Hybrid
-fn simd_select[
+fn select[
     type: DType, size: Int, square: FloatLiteral
 ](
     cond: SIMD[DType.bool, size],
@@ -65,13 +66,13 @@ fn simd_select[
         A new vector of the form [true_case[i] if cond[i] else false_case[i] in enumerate(self)].
     """
     return HybridSIMD[type, size, square](
-        simd_select(cond, true_case, false_case.re),
-        simd_select(cond, 0, false_case.im),
+        select(cond, true_case, false_case.re),
+        select(cond, 0, false_case.im),
     )
 
 
 @always_inline("nodebug")  # Hybrid _ Scalar
-fn simd_select[
+fn select[
     type: DType, size: Int, square: FloatLiteral
 ](
     cond: SIMD[DType.bool, size],
@@ -95,13 +96,13 @@ fn simd_select[
         A new vector of the form [true_case[i] if cond[i] else false_case[i] in enumerate(self)].
     """
     return HybridSIMD[type, size, square](
-        simd_select(cond, true_case.re, false_case),
-        simd_select(cond, true_case.im, 0),
+        select(cond, true_case.re, false_case),
+        select(cond, true_case.im, 0),
     )
 
 
 @always_inline("nodebug")  # Hybrid _ Hybrid
-fn simd_select[
+fn select[
     type: DType, size: Int, square: FloatLiteral
 ](
     cond: SIMD[DType.bool, size],
@@ -125,8 +126,8 @@ fn simd_select[
         A new vector of the form [true_case[i] if cond[i] else false_case[i] in enumerate(self)].
     """
     return HybridSIMD[type, size, square](
-        simd_select(cond, true_case.re, false_case.re),
-        simd_select(cond, true_case.im, false_case.im),
+        select(cond, true_case.re, false_case.re),
+        select(cond, true_case.im, false_case.im),
     )
 
 
@@ -155,15 +156,15 @@ fn sqrt[
 
     @parameter
     if type.is_floating_point():
-        return simd_select(value == 0, 0, 1 / rsqrt[value]())
+        return select(value == 0, 0, 1 / rsqrt[value]())
     var negative = (value <= 0)
     var finished = (negative) | (value == 1)
-    var a = simd_select(negative, -1, (value + 1) / 2)
+    var a = select(negative, -1, (value + 1) / 2)
     while not finished:
         var b = (a + value / a) / 2
         finished |= b >= a
-        a = simd_select(finished, a, b)
-    return simd_select(negative, 0, a)
+        a = select(finished, a, b)
+    return select(negative, 0, a)
 
 
 @always_inline("nodebug")
@@ -224,11 +225,11 @@ fn rsqrt[
         return 0
     var negative = value <= 0
     var finished = negative | (value == 1)
-    var a = simd_select[type](negative, nan[type](), 2 / (value + 1))
+    var a = select[type](negative, nan[type](), 2 / (value + 1))
     while not finished:
         var b = (a / 2) * (3 - value * a * a)
         finished |= b <= a
-        a = simd_select(finished, a, b)
+        a = select(finished, a, b)
     return a
 
 

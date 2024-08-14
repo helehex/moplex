@@ -380,7 +380,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     fn min(self, other: Self) -> Self:
         """Return the value which is closest to negative infinity."""
         var cond = (self < other) | (isnan_hybrid(self))
-        return simd_select(cond, self, other)
+        return select(cond, self, other)
 
     @always_inline
     fn min_coef(self) -> Self.Coef:
@@ -414,7 +414,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     fn max(self, other: Self) -> Self:
         """Return the value which is closest to positive infinity."""
         var cond = (self > other) | (isnan_hybrid(self))
-        return simd_select(cond, self, other)
+        return select(cond, self, other)
 
     @always_inline
     fn max_coef(self) -> Self.Coef:

@@ -56,7 +56,7 @@ fn newtons_method[
         if not isnan(epsilon):
             var exploded = abs(yp) <= epsilon
             completed |= exploded
-            x1 = simd_select(exploded, _nan, x1)
+            x1 = select(exploded, _nan, x1)
 
         var x2 = x1 - (f(x1) - y_offset) / yp
 
@@ -68,13 +68,13 @@ fn newtons_method[
         if not isnan(tolerance) or not isnan(epsilon):
             if completed.reduce_and():
                 return x1
-            x1 = simd_select(completed, x1, x2)
+            x1 = select(completed, x1, x2)
         else:
             x1 = x2
 
     @parameter
     if not isnan(tolerance) or not isnan(epsilon):
-        return simd_select(completed, x1, _nan)
+        return select(completed, x1, _nan)
     return x1
 
 
@@ -190,7 +190,7 @@ fn newtons_method[
         if not isnan(epsilon):
             var exploded = l1norm(yp) <= epsilon
             completed |= exploded
-            x1 = simd_select(exploded, _nan, x1)
+            x1 = select(exploded, _nan, x1)
 
         var x2 = x1 - (f(x1) - y_offset) / yp
 
@@ -202,11 +202,11 @@ fn newtons_method[
         if not isnan(tolerance) or not isnan(epsilon):
             if completed.reduce_and():
                 return x1
-            x1 = simd_select(completed, x1, x2)
+            x1 = select(completed, x1, x2)
         else:
             x1 = x2
 
     @parameter
     if not isnan(tolerance) or not isnan(epsilon):
-        return simd_select(completed, x1, _nan)
+        return select(completed, x1, _nan)
     return x1
