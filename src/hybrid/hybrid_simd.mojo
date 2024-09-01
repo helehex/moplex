@@ -379,7 +379,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     @always_inline
     fn min(self, other: Self) -> Self:
         """Return the value which is closest to negative infinity."""
-        var cond = (self < other) | (isnan_hybrid(self))
+        var cond = (self < other) | (isnan(self))
         return select(cond, self, other)
 
     @always_inline
@@ -413,7 +413,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     @always_inline
     fn max(self, other: Self) -> Self:
         """Return the value which is closest to positive infinity."""
-        var cond = (self > other) | (isnan_hybrid(self))
+        var cond = (self > other) | (isnan(self))
         return select(cond, self, other)
 
     @always_inline

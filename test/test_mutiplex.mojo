@@ -6,7 +6,6 @@
 from testing import assert_true, assert_false, assert_equal
 from _testing import assert_almost_equal
 
-from moplex.math.limit import NAN, INF
 from moplex.math.constants import e, pi
 from moplex.hybrid.multiplex_simd import *
 

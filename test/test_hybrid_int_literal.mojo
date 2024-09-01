@@ -6,8 +6,7 @@
 from testing import assert_true, assert_false, assert_equal
 from _testing import assert_almost_equal, assert_equal_
 
-from moplex.math.limit import NAN
-from moplex.math.constants import e, pi
+from moplex.math.constants import nan, e, pi
 from moplex.hybrid.hybrid_int_literal import *
 
 
@@ -185,7 +184,7 @@ def test_truediv():
     # +--- [0]
     assert_almost_equal(DualplexIntLiteral(0, 0) / DualplexIntLiteral(1, 2), Dualplex64(0, 0))
     assert_almost_equal(DualplexIntLiteral(1, 2) / DualplexIntLiteral(1, 2), Dualplex64(1, 0))
-    assert_almost_equal(DualplexIntLiteral(0, 0) / DualplexIntLiteral(0, 2), Dualplex64(NAN, NAN), equal_nan=True)
+    assert_almost_equal(DualplexIntLiteral(0, 0) / DualplexIntLiteral(0, 2), Dualplex64(nan, nan), equal_nan=True)
     assert_almost_equal(DualplexIntLiteral(1, 4) / DualplexIntLiteral(1, 2), Dualplex64(1, 2))
 
     # +--- [1]

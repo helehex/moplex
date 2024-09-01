@@ -6,8 +6,7 @@
 from testing import assert_true, assert_false, assert_equal
 from _testing import assert_almost_equal
 
-from moplex.math.limit import NAN, INF
-from moplex.math.constants import e, pi
+from moplex.math.constants import nan, inf, e, pi
 from moplex.hybrid.hybrid_simd import *
 
 
@@ -212,7 +211,7 @@ def test_measure():
 
 def test_argument():
     # +--- [-1]
-    assert_almost_equal(Complex64(0, 0).argument(), NAN, equal_nan=True)
+    assert_almost_equal(Complex64(0, 0).argument(), nan, equal_nan=True)
     assert_almost_equal(Complex64(1, 0).argument(), 0)
     assert_almost_equal(Complex64(1, 1).argument(), pi / 4)
     assert_almost_equal(Complex64(0, 1).argument(), pi / 2)
@@ -221,18 +220,18 @@ def test_argument():
     assert_almost_equal(Complex64(1, 0).argument[branch=1](), pi)
 
     # +--- [0]
-    assert_almost_equal(Dualplex64(0, 0).argument(), NAN, equal_nan=True)
-    assert_almost_equal(Dualplex64(0, 1.5).argument(), INF)
-    assert_almost_equal(Dualplex64(0, -3.1).argument(), -INF)
+    assert_almost_equal(Dualplex64(0, 0).argument(), nan, equal_nan=True)
+    assert_almost_equal(Dualplex64(0, 1.5).argument(), inf)
+    assert_almost_equal(Dualplex64(0, -3.1).argument(), -inf)
     assert_almost_equal(Dualplex64(6, 0).argument(), 0)
     assert_almost_equal(Dualplex64(-0.5, 0).argument(), 0)
     assert_almost_equal(Dualplex64(-2, -3).argument(), 1.5)
     assert_almost_equal(Dualplex64(-0.1, 0.1).argument(), -1.0)
 
     # +--- [1]
-    assert_almost_equal(Hyperplex64(0, 0).argument(), NAN, equal_nan=True)
-    assert_almost_equal(Hyperplex64(1, 1).argument(), INF)
-    assert_almost_equal(Hyperplex64(2, -2).argument(), -INF)
+    assert_almost_equal(Hyperplex64(0, 0).argument(), nan, equal_nan=True)
+    assert_almost_equal(Hyperplex64(1, 1).argument(), inf)
+    assert_almost_equal(Hyperplex64(2, -2).argument(), -inf)
     assert_almost_equal(Hyperplex64(5, 0).argument(), 0)
     assert_almost_equal(Hyperplex64(-0.1, 0).argument(), 0)
     assert_almost_equal(Hyperplex64(-3, -2).argument(), 0.804718956217)
@@ -341,7 +340,7 @@ def test_truediv():
     # +--- [0]
     assert_equal(Dualplex64(0, 0) / Dualplex64(1, 2), Dualplex64(0, 0))
     assert_equal(Dualplex64(1, 2) / Dualplex64(1, 2), Dualplex64(1, 0))
-    assert_equal(Dualplex64(0, 0) / Dualplex64(0, 2), Dualplex64(NAN, NAN))
+    assert_equal(Dualplex64(0, 0) / Dualplex64(0, 2), Dualplex64(nan, nan))
     assert_equal(Dualplex64(1, 4) / Dualplex64(1, 2), Dualplex64(1, 2))
 
     # +--- [1]

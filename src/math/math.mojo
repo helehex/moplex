@@ -137,7 +137,7 @@ fn select[
 #
 @always_inline("nodebug")
 fn sqrt(value: IntLiteral) -> IntLiteral:
-    """Returns the square root of the input IntLiteral. This may change."""
+    """Returns the square root of the input IntLiteral."""
     if value <= 1:
         return value
     var a: IntLiteral = value // 2
@@ -225,7 +225,7 @@ fn rsqrt[
         return 0
     var negative = value <= 0
     var finished = negative | (value == 1)
-    var a = select[type](negative, nan[type](), 2 / (value + 1))
+    var a = select[type](negative, nan, 2 / (value + 1))
     while not finished:
         var b = (a / 2) * (3 - value * a * a)
         finished |= b <= a
@@ -444,7 +444,7 @@ fn pow_(owned lhs: FloatLiteral, owned rhs: FloatLiteral) -> FloatLiteral:
 @always_inline("nodebug")
 fn log_[atol: FloatLiteral = 0.1e-20](owned val: FloatLiteral) -> FloatLiteral:
     if val <= 0:
-        return limit.NAN
+        return nan
     var term: FloatLiteral = (val - 1) / (val + 1)
     var ratio: FloatLiteral = term * term
     var count: FloatLiteral = 1
@@ -1034,6 +1034,31 @@ fn contrast(value: HybridSIMD) -> SIMD[value.type, value.size]:
         return value.measure()
     else:
         return value.denomer()
+
+
+# +----------------------------------------------------------------------------------------------+ #
+# | isnan
+# +----------------------------------------------------------------------------------------------+ #
+#
+@always_inline
+fn isnan(value: FloatLiteral) -> Bool:
+    return value.is_nan()
+
+
+@always_inline
+fn isnan(value: SIMD) -> SIMD[DType.bool, value.size]:
+    from math import isnan as _isnan
+    return _isnan(value)
+
+
+@always_inline
+fn isnan(value: HybridSIMD) -> SIMD[DType.bool, value.size]:
+    return any(isnan(value.re)) or any(isnan(value.im))
+
+
+@always_inline
+fn isnan(value: MultiplexSIMD) -> SIMD[DType.bool, value.size]:
+    return isnan(value.re) or isnan(value.i) or isnan(value.o) or isnan(value.x)
 
 
 # +----------------------------------------------------------------------------------------------+ #
