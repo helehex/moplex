@@ -1,7 +1,7 @@
 # Moplex🔥
 Generalized Complex Numbers for Mojo🔥
 
-Mojo nightly version: `mojo 2024.9.105 (a4c61bf1)`
+Mojo version: `24.6.0.dev2024090821`
 
 Moplex provides generalized complex numbers for the mojo programming language.
 

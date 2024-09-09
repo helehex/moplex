@@ -1,0 +1,16 @@
+[project]
+authors = ["helehex <helehex@gmail.com>"]
+channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+description = "More than just complex numbers."
+name = "moplex"
+platforms = ["linux-64", "osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+bump = "bash scripts/bump.sh"
+build = "bash scripts/build.sh"
+test = { cmd = "bash scripts/test.sh", depends-on = ["build"] }
+format = "mojo format -l 100 src"
+
+[dependencies]
+max = "==24.6.0.dev2024090821"
