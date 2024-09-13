@@ -1,12 +1,9 @@
-# ignored code
+# ignore code
 **/temp.**
 **/temp/
 
 # ignore packages
 *.mojopkg
 
-# pixi environments
-.pixi
-*.egg-info
-# magic environments
+# ignore environments
 .magic
