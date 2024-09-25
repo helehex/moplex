@@ -22,7 +22,9 @@ fn select[
     cond: SIMD[DType.bool, size],
     true_case: SIMD[type, size],
     false_case: SIMD[type, size],
-) -> SIMD[type, size]:
+) -> SIMD[
+    type, size
+]:
     """
     Selects the hybrid elements of the true_case or the false_case based on the input boolean values of the given SIMD vector.
 
@@ -149,9 +151,7 @@ fn sqrt(value: IntLiteral) -> IntLiteral:
 
 
 @always_inline("nodebug")
-fn sqrt[
-    type: DType, size: Int, //, value: SIMD[type, size]
-]() -> SIMD[type, size]:
+fn sqrt[type: DType, size: Int, //, value: SIMD[type, size]]() -> SIMD[type, size]:
     """Returns the square root of the input simd vector."""
 
     @parameter
@@ -215,9 +215,7 @@ fn sqrt[branch: IntLiteral = 0](value: HybridSIMD) -> __type_of(value):
 # +----------------------------------------------------------------------------------------------+ #
 #
 @always_inline("nodebug")
-fn rsqrt[
-    type: DType, size: Int, //, value: SIMD[type, size]
-]() -> SIMD[type, size]:
+fn rsqrt[type: DType, size: Int, //, value: SIMD[type, size]]() -> SIMD[type, size]:
     """Returns the reciprocal square root of the input simd vector."""
 
     @parameter
@@ -235,8 +233,7 @@ fn rsqrt[
 
 @always_inline("nodebug")
 fn rsqrt(value: FloatLiteral) -> FloatLiteral:
-    """Returns the reciprocal square root of the input FloatLiteral. This may change.
-    """
+    """Returns the reciprocal square root of the input FloatLiteral. This may change."""
 
     @parameter
     fn f(value: FloatLiteral) -> FloatLiteral:
@@ -320,9 +317,7 @@ fn exp(value: SIMD) -> __type_of(value):
 
 # change to use antiox type?
 @always_inline("nodebug")
-fn hexp[
-    square: FloatLiteral
-](value: FloatLiteral) -> HybridFloatLiteral[square]:
+fn hexp[square: FloatLiteral](value: FloatLiteral) -> HybridFloatLiteral[square]:
     """
     Antiox exponential.
 
@@ -351,17 +346,13 @@ fn hexp[
         # return HybridFloatLiteral[square](cosh(value), sinh(value))
     else:
         alias factor = ufac(square)
-        var result: HybridFloatLiteral[sign(square)] = hexp[sign(square)](
-            value * factor
-        )
+        var result: HybridFloatLiteral[sign(square)] = hexp[sign(square)](value * factor)
         return HybridFloatLiteral[square](result.re, result.im / factor)
 
 
 # change to use antiox type?
 @always_inline("nodebug")
-fn hexp[
-    square: FloatLiteral
-](value: SIMD) -> HybridSIMD[value.type, value.size, square]:
+fn hexp[square: FloatLiteral](value: SIMD) -> HybridSIMD[value.type, value.size, square]:
     """
     Antiox exponential.
 
@@ -379,21 +370,15 @@ fn hexp[
 
     @parameter
     if square == -1:
-        return HybridSIMD[value.type, value.size, square](
-            cos(value), sin(value)
-        )
+        return HybridSIMD[value.type, value.size, square](cos(value), sin(value))
     elif square == 0:
         return HybridSIMD[value.type, value.size, square](1, value)
     elif square == 1:
-        return HybridSIMD[value.type, value.size, square](
-            cosh(value), sinh(value)
-        )
+        return HybridSIMD[value.type, value.size, square](cosh(value), sinh(value))
     else:
         alias factor = ufac(square)
         var result = hexp[sign(square)](value * factor)
-        return HybridSIMD[value.type, value.size, square](
-            result.re, result.im / factor
-        )
+        return HybridSIMD[value.type, value.size, square](result.re, result.im / factor)
 
 
 @always_inline("nodebug")
@@ -560,15 +545,11 @@ fn sin(value: HybridSIMD) -> __type_of(value):
 
     @parameter
     if value.square == -1:
-        return __type_of(value)(
-            sin(value.re) * cosh(value.im), cos(value.re) * sinh(value.im)
-        )
+        return __type_of(value)(sin(value.re) * cosh(value.im), cos(value.re) * sinh(value.im))
     elif value.square == 0:
         return __type_of(value)(sin(value.re), cos(value.re) * value.im)
     elif value.square == 1:
-        return __type_of(value)(
-            sin(value.re) * cos(value.im), cos(value.re) * sin(value.im)
-        )
+        return __type_of(value)(sin(value.re) * cos(value.im), cos(value.re) * sin(value.im))
     else:
         return sin(value.unitize()).unitize[value.square]()
 
@@ -591,15 +572,11 @@ fn cos(value: HybridSIMD) -> __type_of(value):
 
     @parameter
     if value.square == -1:
-        return __type_of(value)(
-            cos(value.re) * cosh(value.im), -sin(value.re) * sinh(value.im)
-        )
+        return __type_of(value)(cos(value.re) * cosh(value.im), -sin(value.re) * sinh(value.im))
     elif value.square == 0:
         return __type_of(value)(cos(value.re), -sin(value.re) * value.im)
     elif value.square == 1:
-        return __type_of(value)(
-            cos(value.re) * cos(value.im), -sin(value.re) * sin(value.im)
-        )
+        return __type_of(value)(cos(value.re) * cos(value.im), -sin(value.re) * sin(value.im))
     else:
         return cos(value.unitize()).unitize[value.square]()
 
@@ -871,9 +848,7 @@ fn sign(value: Int) -> Int:
 
 
 @always_inline("nodebug")
-fn sign[
-    type: DType, size: Int, //, value: SIMD[type, size]
-]() -> __type_of(value):
+fn sign[type: DType, size: Int, //, value: SIMD[type, size]]() -> __type_of(value):
     """Returns the sign {+, 0, -} of the input."""
 
     @parameter
@@ -897,8 +872,7 @@ fn sign(value: SIMD) -> __type_of(value):
 #
 @always_inline("nodebug")
 fn compare(a: IntLiteral, b: IntLiteral) -> IntLiteral:
-    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b.
-    """
+    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b."""
     if a > b:
         return 1
     elif a < b:
@@ -908,8 +882,7 @@ fn compare(a: IntLiteral, b: IntLiteral) -> IntLiteral:
 
 @always_inline("nodebug")
 fn compare(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
-    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b.
-    """
+    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b."""
     if a > b:
         return 1
     elif a < b:
@@ -919,24 +892,19 @@ fn compare(a: FloatLiteral, b: FloatLiteral) -> FloatLiteral:
 
 @always_inline("nodebug")
 fn compare(a: Int, b: Int) -> Int:
-    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b.
-    """
+    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b."""
     return (SIMD[DType.index, 1](a > b) - SIMD[DType.index, 1](a < b)).value
 
 
 @always_inline("nodebug")
-fn compare[
-    type: DType, size: Int, //, a: SIMD[type, size], b: __type_of(a)
-]() -> __type_of(a):
-    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b.
-    """
+fn compare[type: DType, size: Int, //, a: SIMD[type, size], b: __type_of(a)]() -> __type_of(a):
+    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b."""
     return (a > b).cast[type]() - (a < b).cast[type]()
 
 
 @always_inline("nodebug")
 fn compare(a: SIMD, b: __type_of(a)) -> __type_of(a):
-    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b.
-    """
+    """Compares the two inputs, and returns -1 if a < b, 0 if a = b, and 1 if a > b."""
     return (a > b).cast[a.type]() - (a < b).cast[a.type]()
 
 
@@ -1048,6 +1016,7 @@ fn isnan(value: FloatLiteral) -> Bool:
 @always_inline
 fn isnan(value: SIMD) -> SIMD[DType.bool, value.size]:
     from math import isnan as _isnan
+
     return _isnan(value)
 
 

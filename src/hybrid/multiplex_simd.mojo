@@ -22,9 +22,7 @@ alias Multiplex64 = MultiplexSIMD[DType.float64, 1]
 # +----------------------------------------------------------------------------------------------+ #
 #
 @register_passable("trivial")
-struct MultiplexSIMD[type: DType, size: Int](
-    StringableCollectionElement, Formattable
-):
+struct MultiplexSIMD[type: DType, size: Int](StringableCollectionElement, Formattable):
     """
     Represents a multiplex simd type.
 
@@ -93,8 +91,7 @@ struct MultiplexSIMD[type: DType, size: Int](
 
     @always_inline  # Scalar
     fn __init__(inout self, re: IntLiteral):
-        """Initializes a MultiplexSIMD from a IntLiteral. Truncates if necessary.
-        """
+        """Initializes a MultiplexSIMD from a IntLiteral. Truncates if necessary."""
         self.re = re
         self.i = 0
         self.o = 0
@@ -102,8 +99,7 @@ struct MultiplexSIMD[type: DType, size: Int](
 
     @always_inline  # Scalar
     fn __init__(inout self, re: FloatLiteral):
-        """Initializes a MultiplexSIMD from a FloatLiteral. Truncates if necessary.
-        """
+        """Initializes a MultiplexSIMD from a FloatLiteral. Truncates if necessary."""
         self.re = re
         self.i = 0
         self.o = 0
@@ -139,8 +135,7 @@ struct MultiplexSIMD[type: DType, size: Int](
 
     @always_inline  # Multiplex
     fn __init__(inout self, *m: Self.Lane):
-        """Initializes a MultiplexSIMD from a variadic argument of multiplex elements.
-        """
+        """Initializes a MultiplexSIMD from a variadic argument of multiplex elements."""
         var result: Self = Self {re: m[0].re, i: m[0].i, o: m[0].o, x: m[0].x}
         for i in range(len(m)):
             result.setlane(i, m[i])
@@ -151,16 +146,12 @@ struct MultiplexSIMD[type: DType, size: Int](
     @always_inline
     fn __bool__(self) -> Bool:
         """Returns true when there are any non-zero parts."""
-        return (
-            self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0
-        ).__bool__()
+        return (self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0).__bool__()
 
     @always_inline
     fn is_zero(self) -> Bool:
         """Returns true when both parts of this multiplex number are zero."""
-        return (
-            self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0
-        ).__bool__()
+        return (self.re == 0 and self.i == 0 and self.o == 0 and self.x == 0).__bool__()
 
     @always_inline
     fn is_null(self) -> Bool:
@@ -172,8 +163,7 @@ struct MultiplexSIMD[type: DType, size: Int](
         return (self.re, self.i, self.o, self.x)
 
     fn cast[target: DType](self) -> MultiplexSIMD[target, size]:
-        """Casts the elements of the MultiplexSIMD to the target element type.
-        """
+        """Casts the elements of the MultiplexSIMD to the target element type."""
         return MultiplexSIMD[target, size](
             self.re.cast[target](),
             self.i.cast[target](),
@@ -194,9 +184,7 @@ struct MultiplexSIMD[type: DType, size: Int](
 
         @parameter
         if size == 1:
-            writer.write(
-                self.re, " + ", self.i, "i + ", self.o, "o + ", self.x, "x"
-            )
+            writer.write(self.re, " + ", self.i, "i + ", self.o, "o + ", self.x, "x")
         else:
 
             @parameter
@@ -517,9 +505,7 @@ struct MultiplexSIMD[type: DType, size: Int](
     # +--- multiplication
     @always_inline  # Multiplex * Scalar
     fn __mul__(self, other: Self.Coef) -> Self:
-        return Self(
-            self.re * other, self.i * other, self.o * other, self.x * other
-        )
+        return Self(self.re * other, self.i * other, self.o * other, self.x * other)
 
     @always_inline  # Multiplex * Multiplex
     fn __mul__[__: None = None](self, other: Self) -> Self:
@@ -529,20 +515,14 @@ struct MultiplexSIMD[type: DType, size: Int](
             + self.i * other.o
             + self.o * other.i
             + self.x * other.x,
-            self.re * other.i
-            + self.i * other.re
-            + self.i * other.x
-            - self.x * other.i,
+            self.re * other.i + self.i * other.re + self.i * other.x - self.x * other.i,
             self.re * other.o
             + self.i * other.x
             + self.o * other.re
             - self.o * other.x
             - self.x * other.i
             + self.x * other.o,
-            self.re * other.x
-            - self.i * other.o
-            + self.o * other.i
-            + self.x * other.re,
+            self.re * other.x - self.i * other.o + self.o * other.i + self.x * other.re,
         )
 
     # +--- division
@@ -556,9 +536,7 @@ struct MultiplexSIMD[type: DType, size: Int](
 
     @always_inline  # Multiplex // Scalar
     fn __floordiv__(self, other: Self.Coef) -> Self:
-        return Self(
-            self.re // other, self.i // other, self.o // other, self.x // other
-        )
+        return Self(self.re // other, self.i // other, self.o // other, self.x // other)
 
     @always_inline  # Multiplex // Multiplex
     fn __floordiv__[__: None = None](self, other: Self) -> Self:
@@ -598,17 +576,11 @@ struct MultiplexSIMD[type: DType, size: Int](
 
         @parameter
         if unital.square == 1:
-            return Self(
-                unital.re - self.re, unital.im - self.i, -self.o, -self.x
-            )
+            return Self(unital.re - self.re, unital.im - self.i, -self.o, -self.x)
         elif unital.square == -1:
-            return Self(
-                unital.re - self.re, -self.i, unital.im - self.o, -self.x
-            )
+            return Self(unital.re - self.re, -self.i, unital.im - self.o, -self.x)
         else:
-            return Self(
-                unital.re - self.re, -self.i, -self.o, unital.im - self.x
-            )
+            return Self(unital.re - self.re, -self.i, -self.o, unital.im - self.x)
 
     @always_inline  # Multiplex - Multiplex
     fn __rsub__[__: None = None, ___: None = None](self, other: Self) -> Self:
@@ -617,9 +589,7 @@ struct MultiplexSIMD[type: DType, size: Int](
     # +--- multiplication
     @always_inline  # Scalar * Multiplex
     fn __rmul__(self, other: Self.Coef) -> Self:
-        return Self(
-            other * self.re, other * self.i, other * self.o, other * self.x
-        )
+        return Self(other * self.re, other * self.i, other * self.o, other * self.x)
 
     @always_inline  # Multiplex * Multiplex
     fn __rmul__[__: None = None](self, other: Self) -> Self:

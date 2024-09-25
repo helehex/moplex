@@ -206,9 +206,7 @@ struct EisSIMD_wovo[type: DType = DType.index, size: Int = 1](
         self.format_to["po", "\n"](writer)
 
     @no_inline
-    fn format_to[
-        fmt: StringLiteral, sep: StringLiteral = "\n"
-    ](self, inout writer: Formatter):
+    fn format_to[fmt: StringLiteral, sep: StringLiteral = "\n"](self, inout writer: Formatter):
         @parameter
         if size == 1:
 

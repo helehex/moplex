@@ -39,9 +39,7 @@ struct RunTimeHybridIntLiteral:
 #
 @nonmaterializable(RunTimeHybridIntLiteral)
 @register_passable("trivial")
-struct HybridIntLiteral[square: FloatLiteral](
-    CollectionElement, EqualityComparable
-):
+struct HybridIntLiteral[square: FloatLiteral](CollectionElement, EqualityComparable):
     """
     Represent a hybrid integer literal with scalar and antiox parts.
 
@@ -111,16 +109,11 @@ struct HybridIntLiteral[square: FloatLiteral](
     fn unitize(self) -> HybridFloatLiteral[Self.unital_square]:
         """Unitize the HybridIntLiteral. Normalizes the square and adjusts the antiox coefficient.
         """
-        return HybridFloatLiteral[Self.unital_square](
-            self.re, self.im * Self.unital_factor
-        )
+        return HybridFloatLiteral[Self.unital_square](self.re, self.im * Self.unital_factor)
 
     @always_inline
-    fn unitize[
-        target_square: FloatLiteral
-    ](self) -> HybridFloatLiteral[target_square]:
-        """Unitize the HybridIntLiteral. Sets the square and adjusts the antiox coefficient.
-        """
+    fn unitize[target_square: FloatLiteral](self) -> HybridFloatLiteral[target_square]:
+        """Unitize the HybridIntLiteral. Sets the square and adjusts the antiox coefficient."""
         constrained[
             sign(square) == sign(target_square),
             "cannot unitize: the squares signs must match",
@@ -193,9 +186,7 @@ struct HybridIntLiteral[square: FloatLiteral](
             sign(square) == sign(_square),
             "cannot set antiox. the sign of squares must match",
         ]()
-        self.im = (
-            antiox * (ufac(_square) / Self.unital_factor)
-        ).__int_literal__()
+        self.im = (antiox * (ufac(_square) / Self.unital_factor)).__int_literal__()
 
     # +------( Min / Max )------+ #
     #
@@ -243,14 +234,12 @@ struct HybridIntLiteral[square: FloatLiteral](
 
     @always_inline
     fn __eq__(self, other: Self) -> Bool:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.re == other.re and self.im == other.im
 
     @always_inline
     fn __eq__(self, other: Self.Coef) -> Bool:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.re == other and self.im == 0
 
     @always_inline
@@ -293,8 +282,7 @@ struct HybridIntLiteral[square: FloatLiteral](
     #
     @always_inline
     fn __neg__(self) -> Self:
-        """Defines the unary `-` negative operator. Returns the negative of this hybrid number.
-        """
+        """Defines the unary `-` negative operator. Returns the negative of this hybrid number."""
         return Self(-self.re, -self.im)
 
     @always_inline
@@ -403,9 +391,7 @@ struct HybridIntLiteral[square: FloatLiteral](
         @parameter
         if square == 0:
             return self.re * other.re
-        return (
-            self.re * other.re - square.__int_literal__() * self.im * other.im
-        )
+        return self.re * other.re - square.__int_literal__() * self.im * other.im
 
     @always_inline
     fn outer(self, other: Self) -> Self.Coef:
@@ -589,9 +575,7 @@ struct HybridIntLiteral[square: FloatLiteral](
 
     @always_inline  # Hybrid ** Hybrid
     fn __rpow__(self, other: Self) -> HybridFloatLiteral[square]:
-        return HybridFloatLiteral[square](other) ** HybridFloatLiteral[square](
-            self
-        )
+        return HybridFloatLiteral[square](other) ** HybridFloatLiteral[square](self)
 
     # +------( In Place Arithmetic )------+ #
     #

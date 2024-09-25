@@ -85,16 +85,12 @@ struct HybridInt[square: FloatLiteral](
 
     @always_inline
     fn unitize(self) -> Hybrid64[Self.unital_square]:
-        """Unitize the HybridInt. Normalizes the square and adjusts the antiox coefficient.
-        """
-        return Hybrid64[Self.unital_square](
-            self.re, self.im * Self.unital_factor
-        )
+        """Unitize the HybridInt. Normalizes the square and adjusts the antiox coefficient."""
+        return Hybrid64[Self.unital_square](self.re, self.im * Self.unital_factor)
 
     @always_inline
     fn unitize[target_square: FloatLiteral](self) -> Hybrid64[target_square]:
-        """Unitize the HybridInt. Sets the square and adjusts the antiox coefficient.
-        """
+        """Unitize the HybridInt. Sets the square and adjusts the antiox coefficient."""
         constrained[
             sign(square) == sign(target_square),
             "cannot unitize: the squares signs must match",
@@ -217,14 +213,12 @@ struct HybridInt[square: FloatLiteral](
 
     @always_inline
     fn __eq__(self, other: Self.Coef) -> Bool:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.re == other and self.im == 0
 
     @always_inline
     fn __eq__(self, other: Self) -> Bool:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return self.re == other.re and self.im == other.im
 
     @always_inline
@@ -267,8 +261,7 @@ struct HybridInt[square: FloatLiteral](
     #
     @always_inline
     fn __neg__(self) -> Self:
-        """Defines the unary `-` negative operator. Returns the negative of this hybrid number.
-        """
+        """Defines the unary `-` negative operator. Returns the negative of this hybrid number."""
         return Self(-self.re, -self.im)
 
     @always_inline
@@ -451,15 +444,11 @@ struct HybridInt[square: FloatLiteral](
 
     # +--- division
     @always_inline  # Hybrid / Scalar
-    fn __truediv__(
-        self, other: Self.Coef
-    ) -> HybridSIMD[DType.float64, 1, square]:
+    fn __truediv__(self, other: Self.Coef) -> HybridSIMD[DType.float64, 1, square]:
         return HybridSIMD[DType.float64, 1, square](self) * (1 / other)
 
     @always_inline  # Hybrid / Scalar
-    fn __truediv__(
-        self, other: SIMD
-    ) -> HybridSIMD[other.type, other.size, square]:
+    fn __truediv__(self, other: SIMD) -> HybridSIMD[other.type, other.size, square]:
         return HybridSIMD[other.type, other.size, square](self) / other
 
     @always_inline  # Hybrid / Hybrid
@@ -471,9 +460,7 @@ struct HybridInt[square: FloatLiteral](
         return Self(self.re // other, self.im // other)
 
     @always_inline  # Hybrid // Scalar
-    fn __floordiv__(
-        self, other: SIMD
-    ) -> HybridSIMD[other.type, other.size, square]:
+    fn __floordiv__(self, other: SIMD) -> HybridSIMD[other.type, other.size, square]:
         return HybridSIMD[other.type, other.size, square](self) // other
 
     @always_inline  # Hybrid // Hybrid
@@ -536,9 +523,7 @@ struct HybridInt[square: FloatLiteral](
 
     # +--- division
     @always_inline  # Scalar / Hybrid
-    fn __rtruediv__(
-        rhs, lhs: Self.Coef
-    ) -> HybridSIMD[DType.float64, 1, square]:
+    fn __rtruediv__(rhs, lhs: Self.Coef) -> HybridSIMD[DType.float64, 1, square]:
         return lhs * rhs.conjugate() / rhs.denomer()
 
     @always_inline  # Hybrid / Scalar

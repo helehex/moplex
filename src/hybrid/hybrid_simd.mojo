@@ -129,9 +129,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
         self.im = im
 
     @always_inline  # Coefficients
-    fn __init__[
-        __: None = None
-    ](inout self, re: SIMD[type, 1] = 0, im: SIMD[type, 1] = 0):
+    fn __init__[__: None = None](inout self, re: SIMD[type, 1] = 0, im: SIMD[type, 1] = 0):
         """Initializes a HybridSIMD from coefficients."""
         self.re = re
         self.im = im
@@ -162,8 +160,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     @always_inline  # Scalar
     fn __init__[__: None = None](inout self, re: FloatLiteral):
-        """Initializes a HybridSIMD from a FloatLiteral. Truncates if necessary.
-        """
+        """Initializes a HybridSIMD from a FloatLiteral. Truncates if necessary."""
         self.re = re
         self.im = 0
 
@@ -175,8 +172,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     @always_inline  # Hybrid
     fn __init__(inout self, *h: Self.Lane):
-        """Initializes a HybridSIMD from a variadic argument of hybrid elements.
-        """
+        """Initializes a HybridSIMD from a variadic argument of hybrid elements."""
         var result = Self(h[0].re, h[0].im)
         for i in range(len(h)):
             result.setlane(i, h[i])
@@ -219,8 +215,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     @always_inline
     fn __hybrid_int__(self) -> HybridInt[square]:
-        """Casts the value to a HybridInt. Any fractional components are truncated towards zero.
-        """
+        """Casts the value to a HybridInt. Any fractional components are truncated towards zero."""
         return HybridInt[square](int(self.re), int(self.im))
 
     @always_inline
@@ -230,18 +225,12 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     @always_inline
     fn unitize(self) -> HybridSIMD[type, size, Self.unital_square]:
-        """Unitize the HybridSIMD. Normalizes the square and adjusts the antiox coefficient.
-        """
-        return HybridSIMD[type, size, Self.unital_square](
-            self.re, self.im * Self.unital_factor
-        )
+        """Unitize the HybridSIMD. Normalizes the square and adjusts the antiox coefficient."""
+        return HybridSIMD[type, size, Self.unital_square](self.re, self.im * Self.unital_factor)
 
     @always_inline
-    fn unitize[
-        target_square: FloatLiteral
-    ](self) -> HybridSIMD[type, size, target_square]:
-        """Unitize the HybridSIMD. Sets the square and adjusts the antiox coefficient.
-        """
+    fn unitize[target_square: FloatLiteral](self) -> HybridSIMD[type, size, target_square]:
+        """Unitize the HybridSIMD. Sets the square and adjusts the antiox coefficient."""
         constrained[
             sign(square) == sign(target_square),
             "cannot unitize: the squares signs must match",
@@ -447,16 +436,13 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     #
     @always_inline
     fn __len__(self) -> Int:
-        """Returns the length of the SIMD axis. Guaranteed to be a power of 2.
-        """
+        """Returns the length of the SIMD axis. Guaranteed to be a power of 2."""
         return size
 
     @always_inline
     fn fma(self, mul: Self.Coef, acc: Self.Coef) -> Self:
         """Fused multiply add."""
-        return HybridSIMD[type, size, square](
-            self.re.fma(mul, acc), self.im * mul
-        )
+        return HybridSIMD[type, size, square](self.re.fma(mul, acc), self.im * mul)
 
     @always_inline
     fn fma[__: None = None](self, mul: Self, acc: Self.Coef) -> Self:
@@ -469,14 +455,10 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     @always_inline
     fn fma[__: None = None](self, mul: Self.Coef, acc: Self) -> Self:
         """Fused multiply add."""
-        return HybridSIMD[type, size, square](
-            self.re.fma(mul, acc.re), self.im.fma(mul, acc.im)
-        )
+        return HybridSIMD[type, size, square](self.re.fma(mul, acc.re), self.im.fma(mul, acc.im))
 
     @always_inline
-    fn fma[
-        __: None = None, ___: None = None
-    ](self, mul: Self, acc: Self) -> Self:
+    fn fma[__: None = None, ___: None = None](self, mul: Self, acc: Self) -> Self:
         """Fused multiply add."""
         return HybridSIMD[type, size, square](
             self.re.fma(mul.re, self.im.fma(square * mul.im, acc.re)),
@@ -493,19 +475,15 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     @always_inline
     fn shuffle[*mask: Int](self, other: Self) -> Self:
-        """Shuffle elements along the SIMD axis using a permutation mask and add to other.
-        """
+        """Shuffle elements along the SIMD axis using a permutation mask and add to other."""
         return Self(
             self.re._shuffle_list[mask](other.re),
             self.im._shuffle_list[mask](other.im),
         )
 
     @always_inline
-    fn slice[
-        slice_size: Int, offset: Int
-    ](self) -> HybridSIMD[type, slice_size, square]:
-        """Returns a slice of the HybridSIMD vector with the specified size at a given offset.
-        """
+    fn slice[slice_size: Int, offset: Int](self) -> HybridSIMD[type, slice_size, square]:
+        """Returns a slice of the HybridSIMD vector with the specified size at a given offset."""
         return HybridSIMD[type, slice_size, square](
             self.re.slice[slice_size, offset=offset](),
             self.im.slice[slice_size, offset=offset](),
@@ -514,14 +492,11 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     @always_inline
     fn join(self, other: Self) -> HybridSIMD[type, 2 * size, square]:
         """Concatenates the two HybridSIMD vectors together."""
-        return HybridSIMD[type, 2 * size, square](
-            self.re.join(other.re), self.im.join(other.im)
-        )
+        return HybridSIMD[type, 2 * size, square](self.re.join(other.re), self.im.join(other.im))
 
     @always_inline
     fn interleave(self, other: Self) -> HybridSIMD[type, 2 * size, square]:
-        """Returns a HybridSIMD vector that alternates between the two inputs.
-        """
+        """Returns a HybridSIMD vector that alternates between the two inputs."""
         return HybridSIMD[type, 2 * size, square](
             self.re.interleave(other.re), self.im.interleave(other.im)
         )
@@ -529,10 +504,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     @always_inline
     fn deinterleave(
         self,
-    ) -> (
-        HybridSIMD[type, size // 2, square],
-        HybridSIMD[type, size // 2, square],
-    ):
+    ) -> (HybridSIMD[type, size // 2, square], HybridSIMD[type, size // 2, square],):
         """Deinterleaves this HybridSIMD vector into even and odd indicies."""
         var re = self.re.deinterleave()
         var im = self.im.deinterleave()
@@ -546,8 +518,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
         func: fn (a: HybridSIMD, b: __type_of(a)) capturing -> __type_of(a),
         size_out: Int = 1,
     ](self) -> HybridSIMD[type, size_out, square]:
-        """Calls func recursively on this HybridSIMD to reduce it to the specified size.
-        """
+        """Calls func recursively on this HybridSIMD to reduce it to the specified size."""
 
         @parameter
         if size_out >= size:
@@ -589,20 +560,16 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     fn rotate_right[shift: Int](self) -> Self:
         """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount (with wrap).
         """
-        return Self(
-            self.re.rotate_right[shift](), self.im.rotate_right[shift]()
-        )
+        return Self(self.re.rotate_right[shift](), self.im.rotate_right[shift]())
 
     @always_inline
     fn shift_left[shift: Int](self) -> Self:
-        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount.
-        """
+        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount."""
         return Self(self.re.shift_left[shift](), self.im.shift_left[shift]())
 
     @always_inline
     fn shift_right[shift: Int](self) -> Self:
-        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount.
-        """
+        """Returns this HybriSIMD vector shifted along the SIMD axis by the specified amount."""
         return Self(self.re.shift_right[shift](), self.im.shift_right[shift]())
 
     # +------( Comparison )------+ #
@@ -633,20 +600,17 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
 
     @always_inline
     fn __eq__(self, other: Self.Coef) -> SIMD[DType.bool, size]:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return (self.re == other) & (self.im == 0)
 
     @always_inline
     fn __eq__[____: None = None](self, other: Self) -> SIMD[DType.bool, size]:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return (self.re == other.re) & (self.im == other.im)
 
     @always_inline
     fn __eq__[__: None = None, ___: None = None](self, other: Self) -> Bool:
-        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal.
-        """
+        """Defines the `==` equality operator. Returns true if the hybrid numbers are equal."""
         return (self.__eq__[____=None](other)).reduce_and()
 
     @always_inline
@@ -695,8 +659,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
     #
     @always_inline
     fn __neg__(self) -> Self:
-        """Defines the unary `-` negative operator. Returns the negative of this hybrid number.
-        """
+        """Defines the unary `-` negative operator. Returns the negative of this hybrid number."""
         return Self(-self.re, -self.im)
 
     # @always_inline
@@ -959,9 +922,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
                 return exp(other * log[branch](self))
 
     @always_inline  # Hybrid ** Hybrid
-    fn __pow__[
-        branch: IntLiteral = 0, __: None = None
-    ](self, other: Self) -> Self:
+    fn __pow__[branch: IntLiteral = 0, __: None = None](self, other: Self) -> Self:
         if other == 1:
             return self
         elif other == 2:
@@ -1043,9 +1004,7 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
         return exp(self * log(other))
 
     @always_inline  # Hybrid ** Hybrid
-    fn __rpow__[
-        branch: IntLiteral = 0, __: None = None
-    ](self, other: Self) -> Self:
+    fn __rpow__[branch: IntLiteral = 0, __: None = None](self, other: Self) -> Self:
         return other.__pow__[branch](self)
 
     # +------( In Place Arithmetic )------+ #
@@ -1100,7 +1059,5 @@ struct HybridSIMD[type: DType, size: Int, square: FloatLiteral](
         self = self.__pow__[branch](other)
 
     @always_inline  # Hybrid **= Hybrid
-    fn __ipow__[
-        branch: IntLiteral = 0, __: None = None
-    ](inout self, other: Self):
+    fn __ipow__[branch: IntLiteral = 0, __: None = None](inout self, other: Self):
         self = self.__pow__[branch](other)

@@ -37,9 +37,7 @@ from .wovo import EisInt_wovo as EisInt
 
 
 @always_inline("nodebug")
-fn _max(
-    a: IntLiteral, b: IntLiteral
-) -> IntLiteral:  # <-------- ternary doesnt work for IntLiteral
+fn _max(a: IntLiteral, b: IntLiteral) -> IntLiteral:  # <-------- ternary doesnt work for IntLiteral
     if a > b:
         return a
     else:
@@ -47,9 +45,7 @@ fn _max(
 
 
 @always_inline("nodebug")
-fn _min(
-    a: IntLiteral, b: IntLiteral
-) -> IntLiteral:  # <-------- ternary doesnt work for IntLiteral
+fn _min(a: IntLiteral, b: IntLiteral) -> IntLiteral:  # <-------- ternary doesnt work for IntLiteral
     if a < b:
         return a
     else:
